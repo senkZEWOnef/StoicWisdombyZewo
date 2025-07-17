@@ -1,0 +1,132 @@
+/* Google Fonts (make sure they're linked in index.html) */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Playfair+Display:ital,wght@0,500;1,500&display=swap");
+
+/* 🌿 Base */
+body {
+  background-color: #fdf6e3;
+  color: #2c2c2c;
+  font-family: "Inter", sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* 🧘 Header */
+h1,
+h4,
+h5 {
+  font-family: "Playfair Display", serif;
+  color: #2c2c2c;
+}
+
+h1 {
+  font-size: 2.75rem;
+}
+
+/* 📝 Blockquote styling */
+blockquote {
+  font-family: "Playfair Display", serif;
+  font-style: italic;
+  color: #5c432c;
+  background-color: #f9f4e8;
+  padding: 1.2rem 1.5rem;
+  margin: 2rem auto;
+  border-left: 4px solid #a67c52;
+  max-width: 650px;
+  border-radius: 4px;
+}
+
+/* 🎯 Buttons */
+button.btn {
+  border-radius: 30px;
+  padding: 0.5rem 1.2rem;
+  font-weight: 500;
+  color: #2c2c2c;
+  border: 1px solid #a67c52;
+  background-color: transparent;
+  transition: all 0.2s ease;
+}
+
+button.btn:hover {
+  background-color: #a67c52;
+  color: #fff;
+}
+
+/* ✍️ Mood Input */
+input.form-control {
+  max-width: 300px;
+  border: 1px solid #a67c52;
+  border-radius: 8px;
+}
+
+/* 💬 Quote Response */
+.alert {
+  background-color: #fff8ec;
+  color: #5c432c;
+  border: 1px solid #a67c52;
+  font-family: "Playfair Display", serif;
+  font-size: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 6px;
+  max-width: 650px;
+}
+
+/* 🧱 Break line */
+hr {
+  max-width: 600px;
+  margin: 2rem auto;
+  border-top: 1px solid #e2d7c0;
+}
+
+/* 📱 Responsive tweaks */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 2rem;
+  }
+
+  blockquote {
+    margin: 1.5rem auto;
+    padding: 1rem;
+  }
+
+  .alert {
+    font-size: 0.95rem;
+  }
+}
+
+.split-screen-container {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(to right, #f4efdf 50%, #e8e3d1 50%);
+  color: #2c2c2c;
+  font-family: "Inter", sans-serif;
+}
+
+/* Left and Right Pane */
+.left-pane,
+.right-pane {
+  flex: 1;
+  padding: 2rem;
+}
+
+/* Text + Quote Styling */
+.blockquote {
+  font-family: "Playfair Display", serif;
+  font-style: italic;
+  background-color: #fdf9f2;
+  border-left: 4px solid #a67c52;
+  padding: 1.5rem;
+  max-width: 500px;
+  border-radius: 6px;
+  color: #5c432c;
+}
+
+/* Responsive Mood Section */
+@media (max-width: 768px) {
+  .split-screen-container {
+    flex-direction: column;
+  }
+  .left-pane,
+  .right-pane {
+    width: 100%;
+  }
+}
