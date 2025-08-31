@@ -7,7 +7,7 @@ const MoodSelector = () => {
 
   const getQuote = async (selectedMood: string) => {
     try {
-      const res = await fetch("http://localhost:5000/quote", {
+      const res = await fetch("http://localhost:5001/quote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mood: selectedMood }),

@@ -5,7 +5,7 @@ const Home = () => {
   const [dailyQuote, setDailyQuote] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:5000/daily")
+    fetch("http://localhost:5001/daily")
       .then((res) => res.json())
       .then((data) => setDailyQuote(data.quote));
   }, []);
