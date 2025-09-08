@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   Home, 
@@ -17,7 +17,9 @@ import {
   Settings,
   User,
   ChevronRight,
-  Download
+  Download,
+  Moon,
+  Sun
 } from 'lucide-react';
 
 interface ModernLayoutProps {
@@ -29,6 +31,24 @@ interface ModernLayoutProps {
 const ModernLayout: React.FC<ModernLayoutProps> = ({ children, currentPage, onPageChange }) => {
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const shouldUseDarkMode = savedTheme ? savedTheme === 'dark' : prefersDark;
+    
+    setIsDarkMode(shouldUseDarkMode);
+    document.documentElement.setAttribute('data-theme', shouldUseDarkMode ? 'dark' : 'light');
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = !isDarkMode;
+    setIsDarkMode(newTheme);
+    const theme = newTheme ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  };
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, color: '#667eea' },
@@ -236,6 +256,14 @@ const ModernLayout: React.FC<ModernLayoutProps> = ({ children, currentPage, onPa
           </div>
 
           <div className="d-flex align-items-center">
+            <button 
+              className="btn btn-light rounded-3 me-2" 
+              onClick={toggleTheme}
+              style={{ padding: '8px 12px' }}
+              title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
             <button className="btn btn-light rounded-3 me-2" style={{ padding: '8px 12px' }}>
               <Settings size={18} />
             </button>

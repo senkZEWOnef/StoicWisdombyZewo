@@ -6,7 +6,7 @@
   line-height: 1.6;
   font-weight: 400;
   
-  /* Modern color palette */
+  /* Light theme colors */
   --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   --surface-color: #ffffff;
   --background-color: #f8fafc;
@@ -17,6 +17,16 @@
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+  --scrollbar-track: #f1f5f9;
+  --scrollbar-thumb: #cbd5e0;
+  --scrollbar-thumb-hover: #a0aec0;
+  --input-group-bg: #f1f5f9;
+  --progress-bg: #f1f5f9;
+  --nav-border: #f1f5f9;
+  --blockquote-bg: #f9f4e8;
+  --blockquote-color: #5c432c;
+  --blockquote-border: #a67c52;
+  --split-bg: linear-gradient(to right, #f4efdf 50%, #e8e3d1 50%);
   
   color: var(--text-primary);
   background-color: var(--background-color);
@@ -25,6 +35,33 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+  --primary-gradient: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  --surface-color: #1e293b;
+  --background-color: #0f172a;
+  --text-primary: #f8fafc;
+  --text-secondary: #e2e8f0;
+  --text-muted: #94a3b8;
+  --border-color: #334155;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.3), 0 4px 6px rgba(0, 0, 0, 0.2);
+  --scrollbar-track: #1e293b;
+  --scrollbar-thumb: #475569;
+  --scrollbar-thumb-hover: #64748b;
+  --input-group-bg: #334155;
+  --progress-bg: #334155;
+  --nav-border: #334155;
+  --blockquote-bg: #1e293b;
+  --blockquote-color: #e2e8f0;
+  --blockquote-border: #7c3aed;
+  --split-bg: linear-gradient(to right, #1e293b 50%, #0f172a 50%);
+  
+  color: var(--text-primary);
+  background-color: var(--background-color);
 }
 
 * {
@@ -47,16 +84,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e0;
+  background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a0aec0;
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* Modern card styles */
@@ -76,6 +113,7 @@ body {
   transition: all 0.2s ease;
   font-weight: 500;
   border-radius: 10px !important;
+  color: var(--text-primary) !important;
 }
 
 .btn:hover {
@@ -86,10 +124,34 @@ body {
   background: var(--primary-gradient) !important;
   border: none !important;
   box-shadow: 0 4px 6px rgba(102, 126, 234, 0.25) !important;
+  color: white !important;
 }
 
 .btn-primary:hover {
   box-shadow: 0 6px 12px rgba(102, 126, 234, 0.35) !important;
+  color: white !important;
+}
+
+.btn-light {
+  background-color: var(--surface-color) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.btn-light:hover {
+  background-color: var(--background-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.btn-outline-danger {
+  color: #dc2626 !important;
+  border-color: #fee2e2 !important;
+  background-color: transparent !important;
+}
+
+.btn-outline-danger:hover {
+  background-color: #dc2626 !important;
+  color: white !important;
 }
 
 /* Form controls */
@@ -107,7 +169,7 @@ body {
 
 /* Input groups */
 .input-group-text {
-  background-color: #f1f5f9 !important;
+  background-color: var(--input-group-bg) !important;
   border: 1px solid var(--border-color) !important;
   color: var(--text-secondary);
 }
@@ -153,7 +215,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Progress bars */
 .progress {
-  background-color: #f1f5f9 !important;
+  background-color: var(--progress-bg) !important;
   border-radius: 10px !important;
 }
 
@@ -175,7 +237,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Navigation */
 .nav-tabs {
-  border-bottom: 2px solid #f1f5f9;
+  border-bottom: 2px solid var(--nav-border);
 }
 
 .nav-tabs .nav-link {
@@ -237,11 +299,11 @@ h1, h2, h3, h4, h5, h6 {
 blockquote {
   font-family: "Playfair Display", serif;
   font-style: italic;
-  color: #5c432c;
-  background-color: #f9f4e8;
+  color: var(--blockquote-color);
+  background-color: var(--blockquote-bg);
   padding: 1.2rem 1.5rem;
   margin: 2rem auto;
-  border-left: 4px solid #a67c52;
+  border-left: 4px solid var(--blockquote-border);
   max-width: 650px;
   border-radius: 4px;
 }
@@ -249,8 +311,8 @@ blockquote {
 .split-screen-container {
   display: flex;
   min-height: 100vh;
-  background: linear-gradient(to right, #f4efdf 50%, #e8e3d1 50%);
-  color: #2c2c2c;
+  background: var(--split-bg);
+  color: var(--text-primary);
   font-family: "Inter", sans-serif;
 }
 
