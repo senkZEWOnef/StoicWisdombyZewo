@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Calendar as CalendarIcon, Plus, Clock, MapPin, Users, Edit, Save, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, Clock, Save, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Event {
   id: number;
@@ -18,7 +18,7 @@ const Calendar: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<'month' | 'week' | 'day'>('month');
+  // const [currentView] = useState<'month' | 'week' | 'day'>('month');
   
   // Form states
   const [showForm, setShowForm] = useState(false);

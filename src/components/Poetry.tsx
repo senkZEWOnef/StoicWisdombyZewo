@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Feather, Plus, Edit, Save, X, Lightbulb, Globe, Search, Filter, Star } from 'lucide-react';
+import { Feather, Plus, Save, X, Lightbulb, Globe, Search, Star } from 'lucide-react';
 
 interface Poem {
   id: number;

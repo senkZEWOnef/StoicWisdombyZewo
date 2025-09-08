@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { 
-  Dumbbell, Plus, Clock, CheckCircle, Calendar, Target, Timer, Flame, Edit, Save, X, 
-  TrendingUp, Repeat, Bell, PlayCircle, Trash2, GripVertical, Activity 
+  Dumbbell, Plus, Clock, CheckCircle, Calendar, Timer, Flame, Save, X, 
+  TrendingUp, Repeat, Bell, PlayCircle, Trash2, Activity 
 } from 'lucide-react';
 
 interface Exercise {

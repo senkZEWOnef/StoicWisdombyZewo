@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Calendar, Target, Heart, BookOpen, Dumbbell, Camera, TrendingUp, Plus, ArrowRight, Sparkles, Sun, Moon, Edit3, Save, X } from 'lucide-react';
+import { Calendar, Target, Heart, BookOpen, Dumbbell, Camera, Plus, ArrowRight, Sparkles, Sun, Moon, Edit3, Save, X } from 'lucide-react';
 
 interface DashboardStats {
   journalEntries: number;

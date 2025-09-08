@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Dumbbell, Plus, Clock, CheckCircle, Calendar, Target, Timer, Flame, Edit, Save, X, TrendingUp } from 'lucide-react';
+import { Dumbbell, Plus, Clock, CheckCircle, Calendar, Timer, Flame, Save, X, TrendingUp } from 'lucide-react';
 
 interface Workout {
   id: number;
@@ -209,7 +209,7 @@ const Workouts: React.FC = () => {
 
   const stats = getWorkoutStats();
   const pendingCount = workouts.filter(w => !w.completed).length;
-  const overdueCount = workouts.filter(w => !w.completed && isOverdue(w.target_date, w.completed)).length;
+  // const overdueCount = workouts.filter(w => !w.completed && isOverdue(w.target_date, w.completed)).length;
 
   return (
     <div>

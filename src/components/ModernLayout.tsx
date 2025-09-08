@@ -10,7 +10,6 @@ import {
   Feather, 
   Dumbbell, 
   Camera, 
-  Target, 
   LogOut,
   Menu,
   X,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Bell, Plus, Check, Clock, Calendar, AlertCircle, Save, X } from 'lucide-react';
+import { Bell, Plus, Check, Clock, Calendar, AlertCircle, Save } from 'lucide-react';
 
 interface Reminder {
   id: number;

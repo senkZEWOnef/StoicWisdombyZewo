@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { 
-  Camera, Plus, Target, Flame, Clock, Calendar, Upload, X, Save, 
-  TrendingUp, Coffee, Sunrise, Sun, Moon, Search, Filter, Image
+  Camera, Plus, Target, Flame, Clock, X, Save, 
+  TrendingUp, Coffee, Sunrise, Sun, Moon, Search
 } from 'lucide-react';
 
 interface Meal {
@@ -214,7 +214,7 @@ const Meals: React.FC = () => {
     });
   };
 
-  const setMealTime = (mealType: string, defaultTime: string) => {
+  const setMealTime = (_mealType: string, defaultTime: string) => {
     const dateTimeString = `${selectedDate}T${defaultTime}`;
     setNewMeal({
       ...newMeal,

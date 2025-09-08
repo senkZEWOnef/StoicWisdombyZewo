@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Heart, Smile, Frown, Meh, Sun, Cloud, CloudRain, Zap, Save, BarChart3, Calendar, Quote } from 'lucide-react';
+import { Heart, Smile, Meh, Sun, Cloud, CloudRain, Zap, Save, BarChart3, Calendar, Quote } from 'lucide-react';
 
 interface MoodEntry {
   id: number;
