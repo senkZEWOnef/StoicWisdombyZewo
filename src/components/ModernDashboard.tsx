@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Calendar, Target, Heart, BookOpen, Dumbbell, Camera, Plus, ArrowRight, Sparkles, Sun, Moon, Edit3, Save, X } from 'lucide-react';
+import { Calendar, Target, Heart, BookOpen, Dumbbell, Camera, Plus, ArrowRight, Sparkles, Sun, Moon, Edit3, Save, X, TrendingUp, Activity, Brain, Smile } from 'lucide-react';
 
 interface DashboardStats {
   journalEntries: number;
@@ -109,12 +109,10 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ onPageChange }) => {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '500px' }}>
-        <div className="text-center">
-          <div className="spinner-border text-primary" style={{ width: '3rem', height: '3rem' }}>
-            <span className="visually-hidden">Loading...</span>
-          </div>
-          <div className="mt-3 text-muted">Loading your dashboard...</div>
+      <div className="modern-dashboard">
+        <div className="dashboard-loading">
+          <div className="loading-spinner"></div>
+          <div className="loading-text">Loading your dashboard...</div>
         </div>
       </div>
     );
@@ -205,453 +203,314 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ onPageChange }) => {
   };
 
   return (
-    <div className="container-fluid">
-      {/* Welcome Section */}
-      <div className="row mb-4">
-        <div className="col-12">
-          <div className="card border-0 shadow-sm" 
-               style={{ 
-                 borderRadius: '20px',
-                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                 color: 'white'
-               }}>
-            <div className="card-body p-4">
-              <div className="row align-items-center">
-                <div className="col-lg-8">
-                  <div className="d-flex align-items-center mb-3">
-                    <TimeIcon size={32} className="me-3 opacity-90" />
-                    <div>
-                      <h2 className="mb-1">Good {timeOfDay}!</h2>
-                      <p className="mb-0 opacity-90">Ready to continue your personal growth journey?</p>
-                    </div>
+    <div className="modern-dashboard">
+      <div className="dashboard-container">
+        {/* Header Section */}
+        <div className="dashboard-header">
+          <div className="greeting-section">
+            <div className="greeting-content">
+              <TimeIcon className="time-icon" />
+              <div className="greeting-text">
+                <h1>Good {timeOfDay}!</h1>
+                <p>Ready to continue your growth journey?</p>
+              </div>
+            </div>
+            <div className="date-info">
+              <span className="current-date">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="content-grid">
+          {/* Journal Section */}
+          <div className="journal-section">
+            <div className="section-header">
+              <div className="section-title">
+                <BookOpen className="section-icon" />
+                <span>Today's Reflection</span>
+              </div>
+            </div>
+            
+            {!showMainJournal ? (
+              <div className="journal-placeholder" onClick={() => setShowMainJournal(true)}>
+                <div className="placeholder-content">
+                  <BookOpen className="placeholder-icon" />
+                  <h3>Start writing...</h3>
+                  <p>Capture your thoughts, experiences, and insights from today</p>
+                </div>
+              </div>
+            ) : (
+              <div className="journal-active">
+                <div className="journal-header">
+                  <div className="journal-title">
+                    <BookOpen className="journal-icon" />
+                    <span>Today's Journal Entry</span>
                   </div>
-                  
-                  {!showMainJournal ? (
-                    <div 
-                      className="bg-white bg-opacity-20 p-3 rounded-3 mb-0"
-                      style={{ cursor: 'pointer', minHeight: '120px' }}
-                      onClick={() => setShowMainJournal(true)}
+                  <div className="journal-actions">
+                    <button className="save-btn" onClick={handleMainJournalSave}>
+                      <Save size={16} />
+                      Save
+                    </button>
+                    <button className="cancel-btn" onClick={() => {
+                      setShowMainJournal(false);
+                      setMainJournalEntry('');
+                    }}>
+                      <X size={16} />
+                    </button>
+                  </div>
+                </div>
+                <textarea
+                  value={mainJournalEntry}
+                  onChange={(e) => setMainJournalEntry(e.target.value)}
+                  placeholder="What happened today? How are you feeling? What did you learn?"
+                  className="journal-textarea"
+                  autoFocus
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Quick Notes Section */}
+          <div className="quick-notes-section">
+            <div className="section-header">
+              <div className="section-title">
+                <Edit3 className="section-icon" />
+                <span>Quick Notes</span>
+              </div>
+            </div>
+            
+            {!showQuickNote ? (
+              <div className="notes-placeholder" onClick={() => setShowQuickNote(true)}>
+                <div className="placeholder-content">
+                  <Edit3 className="placeholder-icon" />
+                  <h4>Capture a thought</h4>
+                  <p>Quick ideas, reminders, or observations</p>
+                </div>
+              </div>
+            ) : (
+              <div className="notes-active">
+                <div className="notes-header">
+                  <span>Quick Thought</span>
+                  <div className="notes-actions">
+                    <button className="save-btn-sm" onClick={(e) => {
+                      e.stopPropagation();
+                      handleQuickNoteSave();
+                    }}>
+                      <Save size={14} />
+                    </button>
+                    <button className="cancel-btn-sm" onClick={(e) => {
+                      e.stopPropagation();
+                      setShowQuickNote(false);
+                      setQuickNote('');
+                    }}>
+                      <X size={14} />
+                    </button>
+                  </div>
+                </div>
+                <textarea
+                  value={quickNote}
+                  onChange={(e) => setQuickNote(e.target.value)}
+                  placeholder="What's on your mind?"
+                  className="notes-textarea"
+                  onClick={(e) => e.stopPropagation()}
+                  autoFocus
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Wisdom Section */}
+          <div className="wisdom-section">
+            <div className="section-header">
+              <div className="section-title">
+                <Sparkles className="section-icon" />
+                <span>Daily Wisdom</span>
+              </div>
+              <button 
+                className="mood-toggle-btn"
+                onClick={() => setShowMoodSelector(!showMoodSelector)}
+              >
+                <Brain size={16} />
+              </button>
+            </div>
+            
+            {showMoodSelector ? (
+              <div className="mood-selector">
+                <h4>How are you feeling?</h4>
+                <div className="mood-grid">
+                  {moods.map(mood => (
+                    <button
+                      key={mood.name}
+                      className="mood-btn"
+                      style={{ '--mood-color': mood.color } as React.CSSProperties}
+                      onClick={() => getMoodBasedQuote(mood.name.toLowerCase())}
                     >
-                      <div className="d-flex align-items-start justify-content-between mb-2">
-                        <div className="d-flex align-items-center">
-                          <BookOpen size={20} className="me-2 opacity-75" />
-                          <small className="fw-bold opacity-90">Today's Journal</small>
-                        </div>
-                        <Edit3 size={16} className="opacity-75" />
-                      </div>
-                      
-                      <div className="text-center py-4 d-flex flex-column justify-content-center" style={{ minHeight: '80px' }}>
-                        <BookOpen size={32} className="mb-2 opacity-60" />
-                        <p className="mb-0 opacity-90">Click here to write about your day...</p>
-                        <small className="opacity-75 mt-1">Capture your thoughts, feelings, and reflections</small>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="bg-white rounded-3 p-3 mb-0" style={{ minHeight: '120px' }}>
-                      <div className="d-flex justify-content-between align-items-center mb-3">
-                        <div className="d-flex align-items-center">
-                          <BookOpen size={20} className="me-2" style={{ color: '#667eea' }} />
-                          <h6 className="mb-0" style={{ color: '#2c3e50' }}>Today's Journal Entry</h6>
-                        </div>
-                        <div>
-                          <button 
-                            className="btn btn-sm me-2"
-                            onClick={handleMainJournalSave}
-                            style={{ 
-                              background: '#43e97b',
-                              border: 'none',
-                              color: 'white',
-                              borderRadius: '20px',
-                              padding: '4px 12px'
-                            }}
-                          >
-                            <Save size={14} className="me-1" />
-                            Save
-                          </button>
-                          <button 
-                            className="btn btn-sm"
-                            onClick={() => {
-                              setShowMainJournal(false);
-                              setMainJournalEntry('');
-                            }}
-                            style={{ 
-                              background: '#6c757d',
-                              border: 'none',
-                              color: 'white',
-                              borderRadius: '20px',
-                              padding: '4px 12px'
-                            }}
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      </div>
-                      
-                      <textarea
-                        value={mainJournalEntry}
-                        onChange={(e) => setMainJournalEntry(e.target.value)}
-                        placeholder="What happened today? How do you feel? What did you learn?"
-                        className="form-control border-0 w-100"
-                        style={{ 
-                          background: '#f8f9fa',
-                          color: '#2c3e50',
-                          resize: 'none',
-                          minHeight: '100px',
-                          fontSize: '1rem',
-                          lineHeight: '1.5'
-                        }}
-                        autoFocus
-                      />
-                    </div>
-                  )}
-                  
-                  {/* Daily Wisdom Quote */}
-                  <div className="mt-3">
-                    <div className="bg-white bg-opacity-15 p-2 rounded-3">
-                      <div className="d-flex align-items-center justify-content-between mb-1">
-                        <div className="d-flex align-items-center">
-                          <Sparkles size={16} className="me-2 opacity-75" />
-                          <small className="fw-bold opacity-90">Daily Wisdom</small>
-                        </div>
-                        <button 
-                          className="btn btn-sm p-1"
-                          onClick={() => setShowMoodSelector(!showMoodSelector)}
-                          style={{ background: 'transparent', border: 'none' }}
-                        >
-                          <Edit3 size={12} className="opacity-75" />
-                        </button>
-                      </div>
-                      
-                      {showMoodSelector ? (
-                        <div className="mb-2">
-                          <small className="fw-bold opacity-90 d-block mb-1">Choose mood:</small>
-                          <div className="d-flex flex-wrap gap-1">
-                            {moods.map(mood => (
-                              <button
-                                key={mood.name}
-                                className="btn btn-sm border-0 rounded-pill px-2 py-0"
-                                style={{ 
-                                  background: 'rgba(255, 255, 255, 0.8)',
-                                  color: mood.color,
-                                  fontSize: '0.7rem',
-                                  fontWeight: '600'
-                                }}
-                                onClick={() => getMoodBasedQuote(mood.name.toLowerCase())}
-                              >
-                                {mood.emoji} {mood.name}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      ) : (
-                        <div>
-                          <p className="mb-1 opacity-95 fst-italic" style={{ fontSize: '0.8rem', lineHeight: '1.3' }}>
-                            "{dailyQuote || 'Loading wisdom...'}"
-                          </p>
-                          <small className="opacity-75">— Stoic Philosopher</small>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="col-lg-4 d-none d-lg-block">
-                  <div 
-                    className="bg-white bg-opacity-20 rounded-3 p-3 h-100 position-relative"
-                    style={{ cursor: 'pointer', minHeight: '120px' }}
-                    onClick={() => setShowQuickNote(!showQuickNote)}
-                  >
-                    {!showQuickNote ? (
-                      <div className="text-center d-flex flex-column justify-content-center h-100">
-                        <Edit3 size={32} className="mb-2 opacity-75" />
-                        <div className="fw-bold">Quick Journal</div>
-                        <small className="opacity-75">Click to add a thought</small>
-                      </div>
-                    ) : (
-                      <div className="h-100 d-flex flex-column">
-                        <div className="d-flex justify-content-between align-items-center mb-2">
-                          <small className="fw-bold opacity-90">Quick Note</small>
-                          <div>
-                            <button 
-                              className="btn btn-sm p-1 me-1"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleQuickNoteSave();
-                              }}
-                              style={{ background: 'transparent', border: 'none' }}
-                            >
-                              <Save size={16} className="opacity-75" />
-                            </button>
-                            <button 
-                              className="btn btn-sm p-1"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setShowQuickNote(false);
-                                setQuickNote('');
-                              }}
-                              style={{ background: 'transparent', border: 'none' }}
-                            >
-                              <X size={16} className="opacity-75" />
-                            </button>
-                          </div>
-                        </div>
-                        <textarea
-                          value={quickNote}
-                          onChange={(e) => setQuickNote(e.target.value)}
-                          placeholder="What's on your mind?"
-                          className="form-control border-0 flex-grow-1"
-                          style={{ 
-                            background: 'rgba(255, 255, 255, 0.9)',
-                            color: '#2c3e50',
-                            resize: 'none',
-                            minHeight: '80px',
-                            fontSize: '0.9rem'
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                          autoFocus
-                        />
-                      </div>
-                    )}
-                  </div>
+                      <span className="mood-emoji">{mood.emoji}</span>
+                      <span className="mood-name">{mood.name}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="row g-4 mb-4">
-        <div className="col-lg-3 col-md-6">
-          <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '16px' }}>
-            <div className="card-body p-4 text-center">
-              <div className="rounded-3 d-flex align-items-center justify-content-center mx-auto mb-3"
-                   style={{ width: '60px', height: '60px', backgroundColor: '#f093fb20' }}>
-                <BookOpen size={28} style={{ color: '#f093fb' }} />
+            ) : (
+              <div className="wisdom-content">
+                <blockquote className="wisdom-quote">
+                  "{dailyQuote || 'Loading wisdom...'}"
+                </blockquote>
+                <cite className="wisdom-author">— Stoic Philosophy</cite>
               </div>
-              <h3 className="fw-bold text-dark mb-1">{stats.journalEntries}</h3>
-              <p className="text-muted mb-0">Journal Entries</p>
-              <small className="text-muted">Total written</small>
+            )}
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-icon" style={{ '--stat-color': '#8B5CF6' } as React.CSSProperties}>
+              <BookOpen size={24} />
+            </div>
+            <div className="stat-content">
+              <div className="stat-number">{stats.journalEntries}</div>
+              <div className="stat-label">Journal Entries</div>
+              <div className="stat-sublabel">Total written</div>
+            </div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-icon" style={{ '--stat-color': '#10B981' } as React.CSSProperties}>
+              <Dumbbell size={24} />
+            </div>
+            <div className="stat-content">
+              <div className="stat-number">{stats.todayWorkouts}</div>
+              <div className="stat-label">Workouts</div>
+              <div className="stat-sublabel">Today</div>
+            </div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-icon" style={{ '--stat-color': '#F59E0B' } as React.CSSProperties}>
+              <Camera size={24} />
+            </div>
+            <div className="stat-content">
+              <div className="stat-number">{stats.todayMeals}</div>
+              <div className="stat-label">Meals</div>
+              <div className="stat-sublabel">Logged today</div>
+            </div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-icon" style={{ '--stat-color': '#EF4444' } as React.CSSProperties}>
+              <Heart size={24} />
+            </div>
+            <div className="stat-content">
+              <div className="stat-number">{stats.upcomingReminders}</div>
+              <div className="stat-label">Reminders</div>
+              <div className="stat-sublabel">Pending</div>
             </div>
           </div>
         </div>
 
-        <div className="col-lg-3 col-md-6">
-          <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '16px' }}>
-            <div className="card-body p-4 text-center">
-              <div className="rounded-3 d-flex align-items-center justify-content-center mx-auto mb-3"
-                   style={{ width: '60px', height: '60px', backgroundColor: '#43e97b20' }}>
-                <Dumbbell size={28} style={{ color: '#43e97b' }} />
-              </div>
-              <h3 className="fw-bold text-dark mb-1">{stats.todayWorkouts}</h3>
-              <p className="text-muted mb-0">Today's Workouts</p>
-              <small className="text-muted">Scheduled</small>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-lg-3 col-md-6">
-          <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '16px' }}>
-            <div className="card-body p-4 text-center">
-              <div className="rounded-3 d-flex align-items-center justify-content-center mx-auto mb-3"
-                   style={{ width: '60px', height: '60px', backgroundColor: '#fd79a820' }}>
-                <Camera size={28} style={{ color: '#fd79a8' }} />
-              </div>
-              <h3 className="fw-bold text-dark mb-1">{stats.todayMeals}</h3>
-              <p className="text-muted mb-0">Meals Logged</p>
-              <small className="text-muted">Today</small>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-lg-3 col-md-6">
-          <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '16px' }}>
-            <div className="card-body p-4 text-center">
-              <div className="rounded-3 d-flex align-items-center justify-content-center mx-auto mb-3"
-                   style={{ width: '60px', height: '60px', backgroundColor: '#ff6b6b20' }}>
-                <Heart size={28} style={{ color: '#ff6b6b' }} />
-              </div>
-              <h3 className="fw-bold text-dark mb-1">{stats.upcomingReminders}</h3>
-              <p className="text-muted mb-0">Reminders</p>
-              <small className="text-muted">Pending</small>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Progress Section */}
-      <div className="row g-4 mb-4">
-        <div className="col-lg-6">
-          <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '16px' }}>
-            <div className="card-body p-4">
-              <div className="d-flex align-items-center mb-3">
-                <div className="rounded-2 d-flex align-items-center justify-content-center me-3"
-                     style={{ width: '40px', height: '40px', backgroundColor: '#6c5ce720' }}>
-                  <Target size={20} style={{ color: '#6c5ce7' }} />
-                </div>
+        {/* Progress Section */}
+        <div className="progress-grid">
+          <div className="progress-card">
+            <div className="progress-header">
+              <div className="progress-title">
+                <Target className="progress-icon" />
                 <div>
-                  <h5 className="fw-bold mb-0">Daily Calorie Goal</h5>
-                  <small className="text-muted">Track your nutrition progress</small>
+                  <h3>Calorie Goal</h3>
+                  <p>Track your nutrition</p>
                 </div>
               </div>
-              
-              <div className="mb-3">
-                <div className="d-flex justify-content-between mb-2">
-                  <span className="text-dark fw-medium">{stats.caloriesConsumed} / {stats.calorieGoal} calories</span>
-                  <span className="fw-bold" style={{ color: calorieProgress > 100 ? '#ff6b6b' : '#43e97b' }}>
-                    {Math.round(calorieProgress)}%
-                  </span>
-                </div>
-                <div className="progress" style={{ height: '8px', borderRadius: '10px' }}>
-                  <div 
-                    className="progress-bar"
-                    style={{ 
-                      width: `${Math.min(calorieProgress, 100)}%`,
-                      background: calorieProgress > 100 
-                        ? 'linear-gradient(90deg, #ff6b6b, #ff8e8e)' 
-                        : 'linear-gradient(90deg, #43e97b, #38d9a9)',
-                      borderRadius: '10px'
-                    }}
-                  ></div>
-                </div>
+            </div>
+            
+            <div className="progress-content">
+              <div className="progress-stats">
+                <span className="current-calories">{stats.caloriesConsumed}</span>
+                <span className="goal-calories">/ {stats.calorieGoal} cal</span>
+                <span className="progress-percentage" style={{ color: calorieProgress > 100 ? '#EF4444' : '#10B981' }}>
+                  {Math.round(calorieProgress)}%
+                </span>
               </div>
-              
+              <div className="progress-bar-container">
+                <div 
+                  className="progress-bar"
+                  style={{ 
+                    width: `${Math.min(calorieProgress, 100)}%`,
+                    backgroundColor: calorieProgress > 100 ? '#EF4444' : '#10B981'
+                  }}
+                />
+              </div>
               {calorieProgress > 100 && (
-                <small className="text-warning">⚠️ You've exceeded your daily calorie goal</small>
+                <div className="progress-warning">⚠️ Exceeded daily goal</div>
               )}
             </div>
           </div>
-        </div>
 
-        <div className="col-lg-6">
-          <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '16px' }}>
-            <div className="card-body p-4">
-              <div className="d-flex align-items-center mb-3">
-                <div className="rounded-2 d-flex align-items-center justify-content-center me-3"
-                     style={{ width: '40px', height: '40px', backgroundColor: '#4facfe20' }}>
-                  <Calendar size={20} style={{ color: '#4facfe' }} />
-                </div>
+          <div className="focus-card">
+            <div className="focus-header">
+              <div className="focus-title">
+                <Activity className="focus-icon" />
                 <div>
-                  <h5 className="fw-bold mb-0">Today's Focus</h5>
-                  <small className="text-muted">Your daily priorities</small>
+                  <h3>Today's Focus</h3>
+                  <p>Daily priorities</p>
                 </div>
               </div>
-              
-              <div className="space-y-3">
-                <div className="d-flex justify-content-between align-items-center py-2 border-bottom border-light">
-                  <span className="text-dark">Complete workouts</span>
-                  <span className={`badge ${stats.todayWorkouts > 0 ? 'bg-success' : 'bg-secondary'} rounded-pill`}>
-                    {stats.todayWorkouts > 0 ? 'In Progress' : 'Pending'}
-                  </span>
+            </div>
+            
+            <div className="focus-list">
+              <div className="focus-item">
+                <span>Complete workouts</span>
+                <div className={`focus-badge ${stats.todayWorkouts > 0 ? 'active' : 'pending'}`}>
+                  {stats.todayWorkouts > 0 ? 'Active' : 'Pending'}
                 </div>
-                <div className="d-flex justify-content-between align-items-center py-2 border-bottom border-light">
-                  <span className="text-dark">Log meals</span>
-                  <span className={`badge ${stats.todayMeals >= 3 ? 'bg-success' : 'bg-warning'} rounded-pill`}>
-                    {stats.todayMeals}/3
-                  </span>
+              </div>
+              <div className="focus-item">
+                <span>Log meals</span>
+                <div className={`focus-badge ${stats.todayMeals >= 3 ? 'complete' : 'progress'}`}>
+                  {stats.todayMeals}/3
                 </div>
-                <div className="d-flex justify-content-between align-items-center py-2">
-                  <span className="text-dark">Journal reflection</span>
-                  <span className="badge bg-info rounded-pill">Daily</span>
-                </div>
+              </div>
+              <div className="focus-item">
+                <span>Daily reflection</span>
+                <div className="focus-badge daily">Daily</div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Quick Actions */}
-      <div className="row">
-        <div className="col-12">
-          <div className="card border-0 shadow-sm" style={{ borderRadius: '16px' }}>
-            <div className="card-body p-4">
-              <h5 className="fw-bold mb-4">Quick Actions</h5>
-              <div className="row g-3">
-                <div className="col-lg-2 col-md-4 col-6">
-                  <button 
-                    className="btn w-100 h-100 border-0" 
-                    onClick={() => onPageChange?.('journal')}
-                    style={{ 
-                      borderRadius: '12px', 
-                      background: 'linear-gradient(135deg, #f093fb20, #f093fb10)',
-                      minHeight: '80px'
-                    }}>
-                    <BookOpen size={24} style={{ color: '#f093fb' }} className="mb-2" />
-                    <div className="small fw-medium text-dark">New Journal</div>
-                  </button>
-                </div>
-                
-                <div className="col-lg-2 col-md-4 col-6">
-                  <button 
-                    className="btn w-100 h-100 border-0" 
-                    onClick={() => onPageChange?.('workouts')}
-                    style={{ 
-                      borderRadius: '12px', 
-                      background: 'linear-gradient(135deg, #43e97b20, #43e97b10)',
-                      minHeight: '80px'
-                    }}>
-                    <Dumbbell size={24} style={{ color: '#43e97b' }} className="mb-2" />
-                    <div className="small fw-medium text-dark">Add Workout</div>
-                  </button>
-                </div>
-                
-                <div className="col-lg-2 col-md-4 col-6">
-                  <button 
-                    className="btn w-100 h-100 border-0" 
-                    onClick={() => onPageChange?.('meals')}
-                    style={{ 
-                      borderRadius: '12px', 
-                      background: 'linear-gradient(135deg, #fd79a820, #fd79a810)',
-                      minHeight: '80px'
-                    }}>
-                    <Camera size={24} style={{ color: '#fd79a8' }} className="mb-2" />
-                    <div className="small fw-medium text-dark">Log Meal</div>
-                  </button>
-                </div>
-                
-                <div className="col-lg-2 col-md-4 col-6">
-                  <button 
-                    className="btn w-100 h-100 border-0" 
-                    onClick={() => onPageChange?.('ideas')}
-                    style={{ 
-                      borderRadius: '12px', 
-                      background: 'linear-gradient(135deg, #4facfe20, #4facfe10)',
-                      minHeight: '80px'
-                    }}>
-                    <Plus size={24} style={{ color: '#4facfe' }} className="mb-2" />
-                    <div className="small fw-medium text-dark">Capture Idea</div>
-                  </button>
-                </div>
-                
-                <div className="col-lg-2 col-md-4 col-6">
-                  <button 
-                    className="btn w-100 h-100 border-0" 
-                    onClick={() => onPageChange?.('mood')}
-                    style={{ 
-                      borderRadius: '12px', 
-                      background: 'linear-gradient(135deg, #ff6b6b20, #ff6b6b10)',
-                      minHeight: '80px'
-                    }}>
-                    <Heart size={24} style={{ color: '#ff6b6b' }} className="mb-2" />
-                    <div className="small fw-medium text-dark">Track Mood</div>
-                  </button>
-                </div>
-                
-                <div className="col-lg-2 col-md-4 col-6">
-                  <button 
-                    className="btn w-100 h-100 border-0" 
-                    onClick={() => onPageChange?.('export')}
-                    style={{ 
-                      borderRadius: '12px', 
-                      background: 'linear-gradient(135deg, #a8edea20, #a8edea10)',
-                      minHeight: '80px'
-                    }}>
-                    <ArrowRight size={24} style={{ color: '#a8edea' }} className="mb-2" />
-                    <div className="small fw-medium text-dark">Export Data</div>
-                  </button>
-                </div>
-              </div>
-            </div>
+        {/* Quick Actions */}
+        <div className="quick-actions">
+          <h2>Quick Actions</h2>
+          <div className="actions-grid">
+            <button className="action-btn" onClick={() => onPageChange?.('journal')}>
+              <BookOpen className="action-icon" />
+              <span>New Journal</span>
+            </button>
+            
+            <button className="action-btn" onClick={() => onPageChange?.('workouts')}>
+              <Dumbbell className="action-icon" />
+              <span>Add Workout</span>
+            </button>
+            
+            <button className="action-btn" onClick={() => onPageChange?.('meals')}>
+              <Camera className="action-icon" />
+              <span>Log Meal</span>
+            </button>
+            
+            <button className="action-btn" onClick={() => onPageChange?.('ideas')}>
+              <Plus className="action-icon" />
+              <span>Capture Idea</span>
+            </button>
+            
+            <button className="action-btn" onClick={() => onPageChange?.('mood')}>
+              <Smile className="action-icon" />
+              <span>Track Mood</span>
+            </button>
+            
+            <button className="action-btn" onClick={() => onPageChange?.('export')}>
+              <TrendingUp className="action-icon" />
+              <span>Export Data</span>
+            </button>
           </div>
         </div>
       </div>

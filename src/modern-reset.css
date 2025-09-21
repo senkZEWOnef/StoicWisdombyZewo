@@ -1,0 +1,67 @@
+/* Emergency CSS Reset for Modern Dashboard */
+
+/* Override Bootstrap completely */
+.modern-dashboard,
+.modern-dashboard * {
+  all: unset !important;
+  box-sizing: border-box !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+}
+
+/* Basic display properties */
+.modern-dashboard {
+  display: block !important;
+  min-height: 100vh !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  background-attachment: fixed !important;
+  color: #1e293b !important;
+}
+
+.modern-dashboard .dashboard-container {
+  display: flex !important;
+  flex-direction: column !important;
+  max-width: 1400px !important;
+  margin: 0 auto !important;
+  padding: 20px !important;
+  gap: 24px !important;
+}
+
+.modern-dashboard .content-grid {
+  display: grid !important;
+  grid-template-columns: 2fr 1fr 1fr !important;
+  gap: 24px !important;
+}
+
+.modern-dashboard .journal-section,
+.modern-dashboard .quick-notes-section,
+.modern-dashboard .wisdom-section {
+  display: block !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-radius: 20px !important;
+  padding: 24px !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  min-height: 200px !important;
+}
+
+.modern-dashboard .stats-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
+  gap: 20px !important;
+}
+
+.modern-dashboard .stat-card {
+  display: flex !important;
+  align-items: center !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-radius: 20px !important;
+  padding: 24px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .modern-dashboard .content-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

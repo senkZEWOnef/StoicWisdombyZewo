@@ -70,53 +70,32 @@ const ModernLayout: React.FC<ModernLayoutProps> = ({ children, currentPage, onPa
   const currentMenuItem = menuItems.find(item => item.id === currentPage);
 
   return (
-    <div className="d-flex min-vh-100" style={{ backgroundColor: '#f8fafc' }}>
+    <div className="modern-layout">
       
       {/* Sidebar Overlay for mobile */}
       {sidebarOpen && (
         <div 
-          className="position-fixed w-100 h-100 d-md-none"
-          style={{ 
-            zIndex: 1040, 
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            backdropFilter: 'blur(4px)'
-          }}
+          className="sidebar-overlay"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <div className={`h-100 ${sidebarOpen ? 'd-block position-fixed' : 'd-none d-md-block position-relative'}`} 
-           style={{ 
-             width: '280px', 
-             top: sidebarOpen ? 0 : 'auto', 
-             left: sidebarOpen ? 0 : 'auto', 
-             zIndex: sidebarOpen ? 1050 : 'auto',
-             backgroundColor: '#ffffff',
-             boxShadow: '0 0 40px rgba(0,0,0,0.1)',
-             minHeight: '100vh'
-           }}>
+      <div className={`modern-sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
         
-        <div className="h-100 d-flex flex-column">
+        <div className="sidebar-content">
           {/* Sidebar Header */}
-          <div className="p-4 border-bottom">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <div className="d-flex align-items-center">
-                <div className="rounded-circle d-flex align-items-center justify-content-center me-3"
-                     style={{ 
-                       width: '40px', 
-                       height: '40px', 
-                       background: 'linear-gradient(135deg, #667eea, #764ba2)' 
-                     }}>
-                  <span className="text-white fw-bold">J</span>
-                </div>
-                <div>
-                  <h6 className="mb-0 fw-bold text-dark">Journal</h6>
-                  <small className="text-muted">Personal Growth</small>
-                </div>
+          <div className="sidebar-header">
+            <div className="brand-section">
+              <div className="brand-icon">
+                <span>S</span>
+              </div>
+              <div className="brand-text">
+                <h3>Stoic Wisdom</h3>
+                <p>Personal Growth</p>
               </div>
               <button 
-                className="btn btn-link text-muted d-md-none p-0"
+                className="close-sidebar"
                 onClick={() => setSidebarOpen(false)}
               >
                 <X size={20} />
@@ -124,32 +103,24 @@ const ModernLayout: React.FC<ModernLayoutProps> = ({ children, currentPage, onPa
             </div>
             
             {/* User info */}
-            <div className="d-flex align-items-center p-3 rounded-3" 
-                 style={{ backgroundColor: '#f1f5f9' }}>
-              <div className="rounded-circle d-flex align-items-center justify-content-center me-3"
-                   style={{ 
-                     width: '36px', 
-                     height: '36px', 
-                     backgroundColor: '#667eea' 
-                   }}>
-                <User size={18} className="text-white" />
+            <div className="user-info">
+              <div className="user-avatar">
+                <User size={20} />
               </div>
-              <div className="flex-grow-1">
-                <div className="fw-medium text-dark">{user?.username}</div>
-                <small className="text-muted">Welcome back!</small>
+              <div className="user-details">
+                <div className="user-name">{user?.username}</div>
+                <div className="user-status">Welcome back!</div>
               </div>
             </div>
           </div>
 
           {/* Navigation */}
-          <div className="flex-grow-1 p-3">
-            <div className="mb-3">
-              <small className="text-muted text-uppercase fw-bold px-3" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>
-                MAIN MENU
-              </small>
+          <div className="sidebar-nav">
+            <div className="nav-section-title">
+              MAIN MENU
             </div>
             
-            <nav>
+            <nav className="nav-items">
               {menuItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = currentPage === item.id;
@@ -157,38 +128,16 @@ const ModernLayout: React.FC<ModernLayoutProps> = ({ children, currentPage, onPa
                 return (
                   <button
                     key={item.id}
-                    className={`btn w-100 text-start mb-2 d-flex align-items-center position-relative ${
-                      isActive ? 'text-white' : 'text-dark'
-                    }`}
-                    style={{
-                      border: 'none',
-                      borderRadius: '12px',
-                      padding: '12px 16px',
-                      background: isActive 
-                        ? `linear-gradient(135deg, ${item.color}, ${item.color}dd)` 
-                        : 'transparent',
-                      transition: 'all 0.2s ease',
-                    }}
+                    className={`nav-item ${isActive ? 'active' : ''}`}
+                    style={{ '--item-color': item.color } as React.CSSProperties}
                     onClick={() => {
                       onPageChange(item.id);
                       setSidebarOpen(false);
                     }}
-                    onMouseEnter={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.backgroundColor = '#f1f5f9';
-                        e.currentTarget.style.transform = 'translateX(4px)';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                        e.currentTarget.style.transform = 'translateX(0)';
-                      }
-                    }}
                   >
-                    <Icon size={20} className="me-3" />
-                    <span className="flex-grow-1 fw-medium">{item.label}</span>
-                    {isActive && <ChevronRight size={16} />}
+                    <Icon size={20} className="nav-icon" />
+                    <span className="nav-label">{item.label}</span>
+                    {isActive && <ChevronRight size={16} className="nav-arrow" />}
                   </button>
                 );
               })}
@@ -196,17 +145,9 @@ const ModernLayout: React.FC<ModernLayoutProps> = ({ children, currentPage, onPa
           </div>
 
           {/* Sidebar Footer */}
-          <div className="p-3 border-top">
-            <button
-              className="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center rounded-3"
-              onClick={handleLogout}
-              style={{ 
-                border: '1px solid #fee2e2',
-                color: '#dc2626',
-                padding: '12px'
-              }}
-            >
-              <LogOut size={18} className="me-2" />
+          <div className="sidebar-footer">
+            <button className="logout-btn" onClick={handleLogout}>
+              <LogOut size={18} />
               Sign Out
             </button>
           </div>
@@ -214,66 +155,18 @@ const ModernLayout: React.FC<ModernLayoutProps> = ({ children, currentPage, onPa
       </div>
 
       {/* Main Content */}
-      <div className="flex-grow-1 d-flex flex-column">
-        {/* Top Bar */}
-        <div className="bg-white border-bottom px-4 py-3 d-flex align-items-center justify-content-between"
-             style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div className="d-flex align-items-center">
-            <button
-              className="btn btn-light d-md-none me-3 rounded-3"
-              onClick={() => setSidebarOpen(true)}
-              style={{ padding: '8px 12px' }}
-            >
-              <Menu size={20} />
-            </button>
-            
-            <div>
-              <h4 className="mb-0 fw-bold text-dark d-flex align-items-center">
-                {currentMenuItem && (
-                  <>
-                    <div className="rounded-2 d-flex align-items-center justify-content-center me-3"
-                         style={{ 
-                           width: '32px', 
-                           height: '32px', 
-                           backgroundColor: `${currentMenuItem.color}20`,
-                         }}>
-                      <currentMenuItem.icon size={18} style={{ color: currentMenuItem.color }} />
-                    </div>
-                    {currentMenuItem.label}
-                  </>
-                )}
-              </h4>
-              <small className="text-muted">
-                {new Date().toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
-              </small>
-            </div>
-          </div>
-
-          <div className="d-flex align-items-center">
-            <button 
-              className="btn btn-light rounded-3 me-2" 
-              onClick={toggleTheme}
-              style={{ padding: '8px 12px' }}
-              title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-            >
-              {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-            <button className="btn btn-light rounded-3 me-2" style={{ padding: '8px 12px' }}>
-              <Settings size={18} />
-            </button>
-          </div>
-        </div>
+      <div className="main-content">
+        {/* Mobile Menu Button */}
+        <button
+          className="mobile-menu-btn"
+          onClick={() => setSidebarOpen(true)}
+        >
+          <Menu size={20} />
+        </button>
 
         {/* Page Content */}
-        <div className="flex-grow-1 p-4" style={{ backgroundColor: '#f8fafc' }}>
-          <div className="container-fluid">
-            {children}
-          </div>
+        <div className="page-content">
+          {children}
         </div>
       </div>
     </div>

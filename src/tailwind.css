@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .glass-card {
+    @apply bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl;
+  }
+  
+  .modern-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+  
+  .gradient-text {
+    @apply bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent;
+  }
+  
+  .hover-lift {
+    @apply transition-all duration-300 ease-out hover:scale-[1.02] hover:shadow-2xl;
+  }
+  
+  .animate-in {
+    @apply animate-fade-in;
+  }
+}

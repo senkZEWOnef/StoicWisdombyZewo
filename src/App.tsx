@@ -1,57 +1,51 @@
 import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import ModernLogin from './components/ModernLogin';
-import ModernLayout from './components/ModernLayout';
-import ModernDashboard from './components/ModernDashboard';
-import Journal from './components/Journal';
-import Ideas from './components/Ideas';
-import Reminders from './components/Reminders';
-import Calendar from './components/Calendar';
-import MoodWisdom from './components/MoodWisdom';
-import Poetry from './components/Poetry';
-import EnhancedWorkouts from './components/EnhancedWorkouts';
-import Meals from './components/Meals';
-import DataExport from './components/DataExport';
+import PremiumLogin from './components/PremiumLogin';
+import PremiumLayout from './components/PremiumLayout';
+import PremiumDashboard from './components/PremiumDashboard';
+import PremiumJournal from './components/PremiumJournal';
+import PremiumIdeas from './components/PremiumIdeas';
+import PremiumWorkouts from './components/PremiumWorkouts';
+import PremiumMeals from './components/PremiumMeals';
+import PremiumMoodWisdom from './components/PremiumMoodWisdom';
+import PremiumCalendar from './components/PremiumCalendar';
+import PremiumDataExport from './components/PremiumDataExport';
 
 const AppContent: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const [currentPage, setCurrentPage] = useState('dashboard');
 
   if (!isAuthenticated) {
-    return <ModernLogin />;
+    return <PremiumLogin />;
   }
 
   const renderPage = () => {
     switch (currentPage) {
       case 'dashboard':
-        return <ModernDashboard onPageChange={setCurrentPage} />;
+        return <PremiumDashboard onPageChange={setCurrentPage} />;
       case 'journal':
-        return <Journal />;
+        return <PremiumJournal />;
       case 'ideas':
-        return <Ideas />;
-      case 'reminders':
-        return <Reminders />;
+        return <PremiumIdeas />;
       case 'calendar':
-        return <Calendar />;
+        return <PremiumCalendar />;
       case 'mood':
-        return <MoodWisdom />;
-      case 'poetry':
-        return <Poetry />;
+        return <PremiumMoodWisdom />;
       case 'workouts':
-        return <EnhancedWorkouts />;
+        return <PremiumWorkouts />;
       case 'meals':
-        return <Meals />;
+        return <PremiumMeals />;
       case 'export':
-        return <DataExport />;
+        return <PremiumDataExport />;
       default:
-        return <ModernDashboard />;
+        return <PremiumDashboard onPageChange={setCurrentPage} />;
     }
   };
 
   return (
-    <ModernLayout currentPage={currentPage} onPageChange={setCurrentPage}>
+    <PremiumLayout currentPage={currentPage} onPageChange={setCurrentPage}>
       {renderPage()}
-    </ModernLayout>
+    </PremiumLayout>
   );
 };
 
