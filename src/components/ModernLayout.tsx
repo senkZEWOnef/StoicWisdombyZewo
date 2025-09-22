@@ -4,21 +4,18 @@ import {
   Home, 
   BookOpen, 
   Lightbulb, 
-  Bell, 
   Calendar, 
   Heart, 
-  Feather, 
   Dumbbell, 
   Camera, 
   LogOut,
   Menu,
   X,
-  Settings,
   User,
   ChevronRight,
   Download,
-  Moon,
-  Sun
+  Bell,
+  Feather
 } from 'lucide-react';
 
 interface ModernLayoutProps {
@@ -30,24 +27,24 @@ interface ModernLayoutProps {
 const ModernLayout: React.FC<ModernLayoutProps> = ({ children, currentPage, onPageChange }) => {
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  // const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const shouldUseDarkMode = savedTheme ? savedTheme === 'dark' : prefersDark;
     
-    setIsDarkMode(shouldUseDarkMode);
+    // setIsDarkMode(shouldUseDarkMode);
     document.documentElement.setAttribute('data-theme', shouldUseDarkMode ? 'dark' : 'light');
   }, []);
 
-  const toggleTheme = () => {
-    const newTheme = !isDarkMode;
-    setIsDarkMode(newTheme);
-    const theme = newTheme ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-  };
+  // const toggleTheme = () => {
+  //   const newTheme = !isDarkMode;
+  //   setIsDarkMode(newTheme);
+  //   const theme = newTheme ? 'dark' : 'light';
+  //   document.documentElement.setAttribute('data-theme', theme);
+  //   localStorage.setItem('theme', theme);
+  // };
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, color: '#667eea' },
@@ -67,7 +64,7 @@ const ModernLayout: React.FC<ModernLayoutProps> = ({ children, currentPage, onPa
     setSidebarOpen(false);
   };
 
-  const currentMenuItem = menuItems.find(item => item.id === currentPage);
+  // const currentMenuItem = menuItems.find(item => item.id === currentPage);
 
   return (
     <div className="modern-layout">

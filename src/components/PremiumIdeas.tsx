@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Lightbulb, Plus, Edit, Save, Tag, Search, Filter, Sparkles, Brain, Zap, Star } from 'lucide-react';
+import { Lightbulb, Plus, Edit, Tag, Search, Filter, Sparkles, Brain, Zap, Star } from 'lucide-react';
 
 interface Idea {
   id: number;

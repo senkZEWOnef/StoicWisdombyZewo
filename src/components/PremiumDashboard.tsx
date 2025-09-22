@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { 
-  Calendar, Target, Heart, BookOpen, Dumbbell, Camera, Plus, ArrowRight, 
-  Sparkles, Sun, Moon, Edit3, Save, X, TrendingUp, Activity, Brain, 
-  Smile, ChevronRight, Star, Zap, Award, Footprints, Flame, CheckSquare,
+  Target, Heart, BookOpen, Dumbbell, Camera, Plus, 
+  Sparkles, Sun, Moon, Edit3, Save, X, Activity, Brain, 
+  Smile, Star, Zap, Footprints, Flame, CheckSquare,
   Square, Trash2
 } from 'lucide-react';
 
@@ -845,7 +845,7 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
               { icon: Target, label: 'Goals', page: 'goals', color: 'from-cyan-500 to-blue-600' },
               { icon: Plus, label: 'Ideas', page: 'ideas', color: 'from-purple-500 to-purple-600' },
               { icon: Smile, label: 'Mood', page: 'mood', color: 'from-pink-500 to-pink-600' },
-            ].map((action, index) => (
+            ].map((action) => (
               <button
                 key={action.label}
                 className="group relative overflow-hidden rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 p-4 transition-all duration-300 hover:scale-105"

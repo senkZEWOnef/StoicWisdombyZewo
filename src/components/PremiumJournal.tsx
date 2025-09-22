@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Plus, BookOpen, Calendar, Edit, Save, X, Search, Filter, Heart, Star } from 'lucide-react';
+import { Plus, BookOpen, Calendar, Edit, Save, X, Search, Heart } from 'lucide-react';
 
 interface JournalEntry {
   id: number;

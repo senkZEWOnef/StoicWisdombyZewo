@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   Calendar as CalendarIcon, Plus, Clock, Save, X, ChevronLeft, ChevronRight,
-  Grid3X3, List, Eye, AlertCircle, MapPin, User, Zap
+  Grid3X3, List, Eye, MapPin, User
 } from 'lucide-react';
 
 interface Event {
@@ -156,21 +156,21 @@ const PremiumCalendar: React.FC = () => {
     });
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 1) return 'Today';
-    if (diffDays === 2) return 'Tomorrow';
-    if (diffDays <= 7) return `${diffDays} days`;
-    
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric'
-    });
-  };
+  // const formatDate = (dateString: string) => {
+  //   const date = new Date(dateString);
+  //   const now = new Date();
+  //   const diffTime = Math.abs(now.getTime() - date.getTime());
+  //   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  //   
+  //   if (diffDays === 1) return 'Today';
+  //   if (diffDays === 2) return 'Tomorrow';
+  //   if (diffDays <= 7) return `${diffDays} days`;
+  //   
+  //   return date.toLocaleDateString('en-US', {
+  //     month: 'short',
+  //     day: 'numeric'
+  //   });
+  // };
 
   const formatFullDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

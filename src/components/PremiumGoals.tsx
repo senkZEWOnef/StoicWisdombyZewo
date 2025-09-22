@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { 
-  Target, Plus, CheckCircle, Circle, Calendar, Clock, 
+  Target, Plus, CheckCircle, Circle, Calendar, 
   TrendingUp, Save, X, Edit, Trash2, Star, Award,
   ChevronDown, ChevronRight, Flag, Zap, Mountain
 } from 'lucide-react';

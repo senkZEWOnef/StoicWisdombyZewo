@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { 
-  Home, BookOpen, Lightbulb, Bell, Calendar, Heart, Feather, 
+  Home, BookOpen, Lightbulb, Calendar, Heart, 
   Dumbbell, Camera, LogOut, Menu, X, Settings, User, 
-  ChevronRight, Download, Sparkles, TrendingUp, Target
+  ChevronRight, Download, Sparkles, Target
 } from 'lucide-react';
 
 interface PremiumLayoutProps {

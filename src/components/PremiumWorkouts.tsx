@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Dumbbell, Plus, Clock, CheckCircle, Calendar, Timer, Flame, Save, X, TrendingUp, Target, Award, Activity, Search, Filter } from 'lucide-react';
+import { Dumbbell, Plus, CheckCircle, Calendar, Timer, Flame, Save, X, TrendingUp, Target, Award, Activity, Search } from 'lucide-react';
 
 interface Workout {
   id: number;

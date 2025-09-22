@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   Download, FileJson, FileSpreadsheet, FileText, 
-  Save, Shield, CheckCircle, AlertCircle, Database,
-  Archive, Settings, Cloud, HardDrive, Sparkles
+  Shield, CheckCircle, AlertCircle, Database,
+  Archive, Settings, HardDrive, Sparkles
 } from 'lucide-react';
 
 interface ExportOptions {

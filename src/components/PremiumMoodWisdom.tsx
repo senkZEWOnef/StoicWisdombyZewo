@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { 
-  Heart, Smile, Meh, Sun, Cloud, CloudRain, Zap, Save, 
-  BarChart3, Calendar, Quote, Brain, TrendingUp, Sparkles,
-  Eye, Battery, Lightbulb, Activity, Sunrise, Moon, Clock,
+  Save, Calendar, Quote, Brain, TrendingUp,
+  Lightbulb, Sunrise, Moon,
   CheckCircle, AlertCircle, Plus
 } from 'lucide-react';
 
@@ -37,7 +36,7 @@ const PremiumMoodWisdom: React.FC = () => {
   const [selectedMood, setSelectedMood] = useState('');
   const [energyLevel, setEnergyLevel] = useState(5);
   const [moodNotes, setMoodNotes] = useState('');
-  const [generatedQuote, setGeneratedQuote] = useState('');
+  // const [generatedQuote, setGeneratedQuote] = useState('');
 
   const moods = [
     { 
@@ -191,7 +190,7 @@ const PremiumMoodWisdom: React.FC = () => {
   const generateStoicQuote = (mood: string, entryType: 'morning' | 'evening') => {
     const quotes = stoicQuotes[entryType][mood as keyof typeof stoicQuotes.morning] || stoicQuotes[entryType].neutral;
     const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-    setGeneratedQuote(randomQuote);
+    // setGeneratedQuote(randomQuote);
     return randomQuote;
   };
 
@@ -305,7 +304,7 @@ const PremiumMoodWisdom: React.FC = () => {
 
   const recentDays = getRecentDays();
   const todayEntries = getEntriesForDate(selectedDate);
-  const currentTimeSlot = getCurrentTimeSlot();
+  // const currentTimeSlot = getCurrentTimeSlot();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-4 md:p-6 lg:p-8">
