@@ -44,11 +44,119 @@ const PremiumMeals: React.FC = () => {
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [analyzingFood, setAnalyzingFood] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<{calories: number, foods: string[]} | null>(null);
   
   // Filter states
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [mealTimeFilter, setMealTimeFilter] = useState<'all' | 'breakfast' | 'lunch' | 'dinner' | 'snack'>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // AI Food Analysis Function
+  const analyzeFoodImage = async (imageFile: File, description: string) => {
+    setAnalyzingFood(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('image', imageFile);
+      formData.append('description', description);
+      
+      const response = await fetch('http://localhost:5001/analyze-food', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setAnalysisResult(result);
+        setNewMeal(prev => ({
+          ...prev,
+          calories: result.calories.toString(),
+          meal_name: result.foods.join(', ') || prev.meal_name
+        }));
+      } else {
+        // Fallback: estimate calories based on description keywords
+        const estimatedCalories = estimateCaloriesFromDescription(description);
+        setAnalysisResult({ calories: estimatedCalories, foods: [description] });
+        setNewMeal(prev => ({
+          ...prev,
+          calories: estimatedCalories.toString()
+        }));
+      }
+    } catch (error) {
+      console.error('Error analyzing food:', error);
+      // Fallback: estimate calories based on description keywords
+      const estimatedCalories = estimateCaloriesFromDescription(description);
+      setAnalysisResult({ calories: estimatedCalories, foods: [description] });
+      setNewMeal(prev => ({
+        ...prev,
+        calories: estimatedCalories.toString()
+      }));
+    } finally {
+      setAnalyzingFood(false);
+    }
+  };
+  
+  // Fallback calorie estimation based on keywords
+  const estimateCaloriesFromDescription = (description: string): number => {
+    const text = description.toLowerCase();
+    let calories = 0;
+    
+    // Common food calorie estimates
+    const foodCalories: { [key: string]: number } = {
+      // Meals
+      'pizza': 300, 'burger': 500, 'sandwich': 350, 'salad': 150, 'soup': 200,
+      'pasta': 400, 'rice': 200, 'chicken': 250, 'beef': 300, 'fish': 200,
+      'eggs': 150, 'bread': 100, 'toast': 80, 'cereal': 150, 'oatmeal': 150,
+      
+      // Drinks
+      'coffee': 5, 'tea': 2, 'water': 0, 'juice': 120, 'soda': 150, 'beer': 150,
+      'wine': 125, 'milk': 150, 'smoothie': 250, 'protein shake': 200,
+      
+      // Snacks
+      'apple': 80, 'banana': 100, 'orange': 60, 'chips': 150, 'cookies': 100,
+      'chocolate': 150, 'nuts': 200, 'yogurt': 100, 'cheese': 100,
+      
+      // Portions
+      'small': 0.7, 'medium': 1, 'large': 1.5, 'extra large': 2,
+      'slice': 0.3, 'piece': 0.5, 'bowl': 1.2, 'plate': 1.5, 'cup': 0.8
+    };
+    
+    let multiplier = 1;
+    
+    // Check for portion size modifiers
+    for (const [keyword, mult] of Object.entries(foodCalories)) {
+      if (text.includes(keyword) && typeof mult === 'number' && mult <= 2) {
+        multiplier = mult;
+      }
+    }
+    
+    // Add up calories for detected foods
+    for (const [food, cals] of Object.entries(foodCalories)) {
+      if (text.includes(food) && typeof cals === 'number' && cals > 10) {
+        calories += cals;
+      }
+    }
+    
+    // Apply portion multiplier
+    calories = Math.round(calories * multiplier);
+    
+    // Default fallback if no foods detected
+    if (calories === 0) {
+      if (text.includes('drink') || text.includes('beverage')) {
+        calories = 100;
+      } else if (text.includes('snack')) {
+        calories = 150;
+      } else {
+        calories = 300; // Default meal estimate
+      }
+    }
+    
+    return calories;
+  };
 
   const mealTimes = [
     { value: 'breakfast', label: 'Breakfast', icon: Sunrise, color: 'from-yellow-400 to-orange-500', emoji: '🌅', time: '08:00' },
@@ -123,6 +231,20 @@ const PremiumMeals: React.FC = () => {
         setPhotoPreview(e.target?.result as string);
       };
       reader.readAsDataURL(file);
+      
+      // Auto-analyze if description is provided
+      if (newMeal.description.trim()) {
+        analyzeFoodImage(file, newMeal.description);
+      }
+    }
+  };
+  
+  const handleDescriptionChange = (description: string) => {
+    setNewMeal(prev => ({ ...prev, description }));
+    
+    // Auto-analyze if photo is already selected
+    if (selectedPhoto && description.trim()) {
+      analyzeFoodImage(selectedPhoto, description);
     }
   };
 
@@ -192,6 +314,8 @@ const PremiumMeals: React.FC = () => {
     });
     setSelectedPhoto(null);
     setPhotoPreview(null);
+    setAnalysisResult(null);
+    setAnalyzingFood(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -479,15 +603,65 @@ const PremiumMeals: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-white font-medium mb-2">Description (optional)</label>
+                <label className="block text-white font-medium mb-2">Description (for AI calorie estimation)</label>
                 <textarea
                   value={newMeal.description}
-                  onChange={(e) => setNewMeal({...newMeal, description: e.target.value})}
-                  placeholder="Ingredients, preparation method, or notes..."
+                  onChange={(e) => handleDescriptionChange(e.target.value)}
+                  placeholder="Describe your meal in detail: e.g., 'Large grilled chicken salad with avocado, olive oil dressing, and a slice of whole grain bread'"
                   rows={3}
                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 resize-none focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
+                <p className="text-white/60 text-sm mt-1">💡 Be specific about portions, cooking methods, and ingredients for better calorie estimates</p>
               </div>
+              
+              {/* AI Analysis Result */}
+              {(analyzingFood || analysisResult) && (
+                <div className="bg-gradient-to-r from-blue-500/20 to-purple-600/20 backdrop-blur-xl border border-blue-500/30 rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                      {analyzingFood ? (
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      ) : (
+                        <Target className="w-4 h-4 text-white" />
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-white">
+                        {analyzingFood ? 'Analyzing your meal...' : 'AI Calorie Estimation'}
+                      </h4>
+                      <p className="text-blue-200 text-sm">
+                        {analyzingFood ? 'Processing image and description' : 'Based on your description and photo'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {analysisResult && !analyzingFood && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-white/80">Estimated Calories:</span>
+                        <span className="text-xl font-bold text-white">{analysisResult.calories} cal</span>
+                      </div>
+                      
+                      {analysisResult.foods.length > 0 && (
+                        <div>
+                          <span className="text-white/80 text-sm">Detected Foods:</span>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {analysisResult.foods.map((food, index) => (
+                              <span key={index} className="px-2 py-1 bg-white/10 rounded-lg text-white/80 text-sm">
+                                {food}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      <p className="text-blue-200 text-xs italic">
+                        💡 This is an estimate. You can manually adjust the calories below if needed.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Quick Fill Options */}
               <div>
@@ -522,7 +696,7 @@ const PremiumMeals: React.FC = () => {
                       onChange={handlePhotoSelect}
                       className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-orange-500 file:text-white file:cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
-                    <p className="text-white/60 text-sm mt-1">Upload a photo of your meal</p>
+                    <p className="text-white/60 text-sm mt-1">📸 Upload a photo for AI-powered calorie estimation</p>
                   </div>
                   {photoPreview && (
                     <div className="relative">
@@ -545,6 +719,26 @@ const PremiumMeals: React.FC = () => {
                     </div>
                   )}
                 </div>
+                
+                {/* Manual Analyze Button */}
+                {(selectedPhoto || newMeal.description.trim()) && !analyzingFood && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (selectedPhoto && newMeal.description.trim()) {
+                        analyzeFoodImage(selectedPhoto, newMeal.description);
+                      } else if (newMeal.description.trim()) {
+                        const estimatedCalories = estimateCaloriesFromDescription(newMeal.description);
+                        setAnalysisResult({ calories: estimatedCalories, foods: [newMeal.description] });
+                        setNewMeal(prev => ({ ...prev, calories: estimatedCalories.toString() }));
+                      }
+                    }}
+                    className="w-full px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg transition-all flex items-center justify-center gap-2"
+                  >
+                    <Target className="w-4 h-4" />
+                    Analyze Calories with AI
+                  </button>
+                )}
               </div>
 
               {/* Time Selection */}

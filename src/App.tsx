@@ -10,6 +10,7 @@ import PremiumMeals from './components/PremiumMeals';
 import PremiumMoodWisdom from './components/PremiumMoodWisdom';
 import PremiumCalendar from './components/PremiumCalendar';
 import PremiumDataExport from './components/PremiumDataExport';
+import PremiumGoals from './components/PremiumGoals';
 
 const AppContent: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -35,6 +36,8 @@ const AppContent: React.FC = () => {
         return <PremiumWorkouts />;
       case 'meals':
         return <PremiumMeals />;
+      case 'goals':
+        return <PremiumGoals />;
       case 'export':
         return <PremiumDataExport />;
       default:

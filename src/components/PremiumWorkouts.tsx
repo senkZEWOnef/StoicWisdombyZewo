@@ -38,18 +38,47 @@ const PremiumWorkouts: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const workoutTypes = [
-    { name: 'Cardio', emoji: '🏃‍♂️', color: 'from-red-500 to-pink-600' },
-    { name: 'Strength Training', emoji: '💪', color: 'from-orange-500 to-amber-600' },
-    { name: 'Yoga', emoji: '🧘‍♀️', color: 'from-purple-500 to-indigo-600' },
-    { name: 'Running', emoji: '🏃', color: 'from-blue-500 to-cyan-600' },
-    { name: 'Cycling', emoji: '🚴‍♂️', color: 'from-green-500 to-emerald-600' },
-    { name: 'Swimming', emoji: '🏊‍♂️', color: 'from-teal-500 to-blue-600' },
-    { name: 'HIIT', emoji: '🔥', color: 'from-red-500 to-orange-600' },
-    { name: 'Pilates', emoji: '🤸‍♀️', color: 'from-pink-500 to-rose-600' },
-    { name: 'CrossFit', emoji: '⚡', color: 'from-yellow-500 to-orange-600' },
-    { name: 'Walking', emoji: '🚶‍♂️', color: 'from-slate-500 to-gray-600' },
-    { name: 'Dancing', emoji: '💃', color: 'from-purple-500 to-pink-600' },
-    { name: 'Sports', emoji: '⚽', color: 'from-emerald-500 to-teal-600' }
+    // Cardio
+    { name: 'Running', emoji: '🏃', color: 'from-blue-500 to-cyan-600', category: 'Cardio' },
+    { name: 'Cycling', emoji: '🚴‍♂️', color: 'from-green-500 to-emerald-600', category: 'Cardio' },
+    { name: 'Swimming', emoji: '🏊‍♂️', color: 'from-teal-500 to-blue-600', category: 'Cardio' },
+    { name: 'Walking', emoji: '🚶‍♂️', color: 'from-slate-500 to-gray-600', category: 'Cardio' },
+    { name: 'HIIT', emoji: '🔥', color: 'from-red-500 to-orange-600', category: 'Cardio' },
+    { name: 'Elliptical', emoji: '🎯', color: 'from-blue-400 to-cyan-500', category: 'Cardio' },
+    { name: 'Rowing', emoji: '🚣', color: 'from-cyan-600 to-blue-600', category: 'Cardio' },
+    { name: 'Stair Climbing', emoji: '🪜', color: 'from-indigo-500 to-purple-600', category: 'Cardio' },
+    
+    // Strength Training
+    { name: 'Weight Lifting', emoji: '🏋️‍♂️', color: 'from-orange-500 to-amber-600', category: 'Strength' },
+    { name: 'Bodyweight', emoji: '💪', color: 'from-red-500 to-orange-600', category: 'Strength' },
+    { name: 'Push Day', emoji: '⬆️', color: 'from-orange-600 to-red-600', category: 'Strength' },
+    { name: 'Pull Day', emoji: '⬇️', color: 'from-amber-600 to-orange-600', category: 'Strength' },
+    { name: 'Leg Day', emoji: '🦵', color: 'from-red-600 to-pink-600', category: 'Strength' },
+    { name: 'Core Training', emoji: '🎯', color: 'from-yellow-500 to-orange-500', category: 'Strength' },
+    { name: 'Resistance Bands', emoji: '🎗️', color: 'from-pink-500 to-red-500', category: 'Strength' },
+    { name: 'Kettlebell', emoji: '🔔', color: 'from-gray-600 to-gray-700', category: 'Strength' },
+    
+    // Sports
+    { name: 'Soccer', emoji: '⚽', color: 'from-green-500 to-emerald-600', category: 'Sports' },
+    { name: 'Basketball', emoji: '🏀', color: 'from-orange-500 to-red-600', category: 'Sports' },
+    { name: 'Boxing', emoji: '🥊', color: 'from-red-500 to-pink-600', category: 'Sports' },
+    { name: 'Tennis', emoji: '🎾', color: 'from-yellow-500 to-green-500', category: 'Sports' },
+    { name: 'Volleyball', emoji: '🏐', color: 'from-blue-500 to-purple-600', category: 'Sports' },
+    { name: 'Badminton', emoji: '🏸', color: 'from-indigo-500 to-blue-600', category: 'Sports' },
+    { name: 'Martial Arts', emoji: '🥋', color: 'from-purple-600 to-indigo-600', category: 'Sports' },
+    { name: 'Rock Climbing', emoji: '🧗‍♂️', color: 'from-stone-500 to-gray-600', category: 'Sports' },
+    
+    // Flexibility & Recovery
+    { name: 'Yoga', emoji: '🧘‍♀️', color: 'from-purple-500 to-indigo-600', category: 'Flexibility' },
+    { name: 'Pilates', emoji: '🤸‍♀️', color: 'from-pink-500 to-rose-600', category: 'Flexibility' },
+    { name: 'Stretching', emoji: '🤸', color: 'from-green-400 to-teal-500', category: 'Flexibility' },
+    { name: 'Meditation', emoji: '🧘', color: 'from-indigo-400 to-purple-500', category: 'Flexibility' },
+    { name: 'Foam Rolling', emoji: '📏', color: 'from-gray-500 to-slate-600', category: 'Flexibility' },
+    
+    // Fun Activities
+    { name: 'Dancing', emoji: '💃', color: 'from-purple-500 to-pink-600', category: 'Fun' },
+    { name: 'Hiking', emoji: '🥾', color: 'from-green-600 to-emerald-700', category: 'Fun' },
+    { name: 'CrossFit', emoji: '⚡', color: 'from-yellow-500 to-orange-600', category: 'Fun' }
   ];
 
   useEffect(() => {
@@ -351,19 +380,29 @@ const PremiumWorkouts: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-white font-medium mb-3">Quick Templates</label>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                  {workoutTypes.map(type => (
-                    <button
-                      key={type.name}
-                      type="button"
-                      onClick={() => setNewWorkoutName(type.name)}
-                      className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors flex flex-col items-center gap-2 text-center"
-                    >
-                      <span className="text-2xl">{type.emoji}</span>
-                      <span className="text-white/80 text-sm font-medium">{type.name}</span>
-                    </button>
-                  ))}
+                <label className="block text-white font-medium mb-3">Exercise Catalogue</label>
+                <div className="space-y-6">
+                  {['Cardio', 'Strength', 'Sports', 'Flexibility', 'Fun'].map(category => {
+                    const categoryWorkouts = workoutTypes.filter(type => type.category === category);
+                    return (
+                      <div key={category}>
+                        <h4 className="text-white/80 font-semibold mb-3 text-sm uppercase tracking-wider">{category}</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                          {categoryWorkouts.map(type => (
+                            <button
+                              key={type.name}
+                              type="button"
+                              onClick={() => setNewWorkoutName(type.name)}
+                              className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors flex flex-col items-center gap-2 text-center hover-lift"
+                            >
+                              <span className="text-2xl">{type.emoji}</span>
+                              <span className="text-white/80 text-xs font-medium">{type.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
