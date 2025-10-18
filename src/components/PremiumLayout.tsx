@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { 
   Home, BookOpen, Lightbulb, Calendar, Heart, 
   Dumbbell, Camera, LogOut, Menu, X, Settings, User, 
-  ChevronRight, Download, Sparkles, Target
+  ChevronRight, Download, Sparkles, Target, ChevronLeft
 } from 'lucide-react';
 
 interface PremiumLayoutProps {
@@ -15,6 +15,7 @@ interface PremiumLayoutProps {
 const PremiumLayout: React.FC<PremiumLayoutProps> = ({ children, currentPage, onPageChange }) => {
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, gradient: 'from-blue-500 to-purple-600' },
@@ -49,53 +50,76 @@ const PremiumLayout: React.FC<PremiumLayoutProps> = ({ children, currentPage, on
       {/* Sidebar */}
       <div className={`
         fixed lg:relative z-50 lg:z-auto
-        h-full lg:h-screen w-80 
+        h-full lg:h-screen 
         bg-gradient-to-b from-slate-800/50 to-slate-900/50 
         backdrop-blur-xl border-r border-white/10
-        transform transition-transform duration-300 ease-out
+        transform transition-all duration-300 ease-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-80'}
+        w-80
       `}>
         
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="p-6 border-b border-white/10">
+          <div className={`p-6 border-b border-white/10 ${sidebarCollapsed ? 'lg:p-3' : ''}`}>
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
                   <Sparkles className="w-6 h-6 text-white" />
                 </div>
-                <div>
-                  <h1 className="text-xl font-bold text-white">Stoic Wisdom</h1>
-                  <p className="text-white/60 text-sm">Personal Growth Hub</p>
-                </div>
+                {!sidebarCollapsed && (
+                  <div>
+                    <h1 className="text-xl font-bold text-white">Stoic Wisdom</h1>
+                    <p className="text-white/60 text-sm">Personal Growth Hub</p>
+                  </div>
+                )}
               </div>
-              <button 
-                className="lg:hidden p-2 hover:bg-white/10 rounded-lg transition-colors"
-                onClick={() => setSidebarOpen(false)}
-              >
-                <X className="w-5 h-5 text-white/60" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button 
+                  className="hidden lg:block p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                >
+                  <ChevronLeft className={`w-5 h-5 text-white/60 transition-transform ${sidebarCollapsed ? 'rotate-180' : ''}`} />
+                </button>
+                <button 
+                  className="lg:hidden p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <X className="w-5 h-5 text-white/60" />
+                </button>
+              </div>
             </div>
             
             {/* User Profile */}
-            <div className="flex items-center gap-3 p-4 bg-white/5 rounded-xl border border-white/10">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                <User className="w-5 h-5 text-white" />
+            {!sidebarCollapsed && (
+              <div className="flex items-center gap-3 p-4 bg-white/5 rounded-xl border border-white/10">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                  <User className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-white font-medium">{user?.username}</p>
+                  <p className="text-white/60 text-sm">Welcome back!</p>
+                </div>
+                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
               </div>
-              <div className="flex-1">
-                <p className="text-white font-medium">{user?.username}</p>
-                <p className="text-white/60 text-sm">Welcome back!</p>
+            )}
+            {sidebarCollapsed && (
+              <div className="flex justify-center">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                  <User className="w-5 h-5 text-white" />
+                </div>
               </div>
-              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-            </div>
+            )}
           </div>
 
           {/* Navigation */}
-          <div className="flex-1 p-6 overflow-y-auto">
+          <div className={`flex-1 overflow-y-auto ${sidebarCollapsed ? 'lg:p-3' : 'p-6'}`}>
             <div className="mb-6">
-              <p className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-4">
-                Navigation
-              </p>
+              {!sidebarCollapsed && (
+                <p className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-4">
+                  Navigation
+                </p>
+              )}
               
               <nav className="space-y-2">
                 {menuItems.map((item) => {
@@ -106,7 +130,8 @@ const PremiumLayout: React.FC<PremiumLayoutProps> = ({ children, currentPage, on
                     <button
                       key={item.id}
                       className={`
-                        w-full flex items-center gap-4 p-3 rounded-xl transition-all duration-200
+                        w-full flex items-center rounded-xl transition-all duration-200 group relative
+                        ${sidebarCollapsed ? 'justify-center p-2' : 'gap-4 p-3'}
                         ${isActive 
                           ? 'bg-white/10 border border-white/20 shadow-lg' 
                           : 'hover:bg-white/5 border border-transparent'
@@ -116,6 +141,7 @@ const PremiumLayout: React.FC<PremiumLayoutProps> = ({ children, currentPage, on
                         onPageChange(item.id);
                         setSidebarOpen(false);
                       }}
+                      title={sidebarCollapsed ? item.label : undefined}
                     >
                       <div className={`
                         w-10 h-10 rounded-lg flex items-center justify-center
@@ -126,11 +152,22 @@ const PremiumLayout: React.FC<PremiumLayoutProps> = ({ children, currentPage, on
                       `}>
                         <Icon className="w-5 h-5 text-white" />
                       </div>
-                      <span className="flex-1 text-white font-medium text-left">
-                        {item.label}
-                      </span>
-                      {isActive && (
-                        <ChevronRight className="w-4 h-4 text-white/60" />
+                      {!sidebarCollapsed && (
+                        <>
+                          <span className="flex-1 text-white font-medium text-left">
+                            {item.label}
+                          </span>
+                          {isActive && (
+                            <ChevronRight className="w-4 h-4 text-white/60" />
+                          )}
+                        </>
+                      )}
+                      
+                      {/* Tooltip for collapsed state */}
+                      {sidebarCollapsed && (
+                        <div className="absolute left-full ml-2 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                          {item.label}
+                        </div>
                       )}
                     </button>
                   );
@@ -140,19 +177,40 @@ const PremiumLayout: React.FC<PremiumLayoutProps> = ({ children, currentPage, on
           </div>
 
           {/* Footer */}
-          <div className="p-6 border-t border-white/10">
+          <div className={`border-t border-white/10 ${sidebarCollapsed ? 'lg:p-3' : 'p-6'}`}>
             <div className="space-y-3">
-              <button className="w-full flex items-center gap-3 p-3 hover:bg-white/5 rounded-xl transition-colors">
+              <button className={`
+                w-full flex items-center rounded-xl transition-colors group relative
+                ${sidebarCollapsed ? 'justify-center p-2' : 'gap-3 p-3'} 
+                hover:bg-white/5
+              `}
+              title={sidebarCollapsed ? "Settings" : undefined}
+              >
                 <Settings className="w-5 h-5 text-white/60" />
-                <span className="text-white/80">Settings</span>
+                {!sidebarCollapsed && <span className="text-white/80">Settings</span>}
+                {sidebarCollapsed && (
+                  <div className="absolute left-full ml-2 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                    Settings
+                  </div>
+                )}
               </button>
               
               <button
-                className="w-full flex items-center gap-3 p-3 hover:bg-red-500/10 rounded-xl transition-colors group"
+                className={`
+                  w-full flex items-center rounded-xl transition-colors group relative
+                  ${sidebarCollapsed ? 'justify-center p-2' : 'gap-3 p-3'} 
+                  hover:bg-red-500/10
+                `}
                 onClick={handleLogout}
+                title={sidebarCollapsed ? "Sign Out" : undefined}
               >
                 <LogOut className="w-5 h-5 text-white/60 group-hover:text-red-400" />
-                <span className="text-white/80 group-hover:text-red-400">Sign Out</span>
+                {!sidebarCollapsed && <span className="text-white/80 group-hover:text-red-400">Sign Out</span>}
+                {sidebarCollapsed && (
+                  <div className="absolute left-full ml-2 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                    Sign Out
+                  </div>
+                )}
               </button>
             </div>
           </div>
@@ -162,27 +220,27 @@ const PremiumLayout: React.FC<PremiumLayoutProps> = ({ children, currentPage, on
       {/* Main Content */}
       <div className="flex-1 flex flex-col lg:ml-0">
         {/* Mobile Header */}
-        <div className="lg:hidden bg-gradient-to-r from-slate-800/50 to-slate-900/50 backdrop-blur-xl border-b border-white/10 p-4">
+        <div className="lg:hidden bg-gradient-to-r from-slate-800/50 to-slate-900/50 backdrop-blur-xl border-b border-white/10 p-3 sm:p-4">
           <div className="flex items-center justify-between">
             <button
-              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors active:scale-95"
               onClick={() => setSidebarOpen(true)}
             >
-              <Menu className="w-6 h-6 text-white" />
+              <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </button>
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {currentMenuItem && (
                 <>
-                  <div className={`w-8 h-8 rounded-lg bg-gradient-to-r ${currentMenuItem.gradient} flex items-center justify-center`}>
-                    <currentMenuItem.icon className="w-4 h-4 text-white" />
+                  <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-gradient-to-r ${currentMenuItem.gradient} flex items-center justify-center`}>
+                    <currentMenuItem.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                   </div>
-                  <h1 className="text-lg font-semibold text-white">{currentMenuItem.label}</h1>
+                  <h1 className="text-base sm:text-lg font-semibold text-white truncate max-w-[150px] sm:max-w-none">{currentMenuItem.label}</h1>
                 </>
               )}
             </div>
             
-            <div className="w-10"> {/* Spacer */}</div>
+            <div className="w-9 sm:w-10"> {/* Spacer */}</div>
           </div>
         </div>
 

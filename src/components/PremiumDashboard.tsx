@@ -371,33 +371,33 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-4 md:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-2 sm:p-4 md:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
         
         {/* Header Section */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-xl border border-white/20">
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-xl border border-white/20">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20"></div>
-          <div className="relative p-8 md:p-12">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-              <div className="flex items-center gap-6">
+          <div className="relative p-4 sm:p-6 md:p-8 lg:p-12">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
+              <div className="flex items-center gap-3 sm:gap-6">
                 <div className="relative">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                    <TimeIcon className="w-8 h-8 text-white" />
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                    <TimeIcon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                   </div>
-                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                  <div className="absolute -top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full flex items-center justify-center">
+                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full animate-pulse"></div>
                   </div>
                 </div>
                 <div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1 sm:mb-2">
                     Good {timeOfDay}! 
                   </h1>
-                  <p className="text-white/70 text-lg">Ready to unlock your potential today?</p>
+                  <p className="text-white/70 text-sm sm:text-base lg:text-lg">Ready to unlock your potential today?</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-white/60 text-sm font-medium mb-1">TODAY</p>
-                <p className="text-white text-xl font-semibold">
+              <div className="text-left sm:text-right">
+                <p className="text-white/60 text-xs sm:text-sm font-medium mb-1">TODAY</p>
+                <p className="text-white text-lg sm:text-xl font-semibold">
                   {new Date().toLocaleDateString('en-US', { 
                     weekday: 'long', 
                     month: 'long', 
@@ -410,11 +410,11 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
           
           {/* Journal Section */}
-          <div className="lg:col-span-8 space-y-6">
-            <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-6 hover-lift">
+          <div className="lg:col-span-8 space-y-4 sm:space-y-6">
+            <div className="rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 sm:p-6 hover-lift">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 flex items-center justify-center">
@@ -475,43 +475,43 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="rounded-xl bg-gradient-to-r from-blue-500/20 to-blue-600/20 backdrop-blur-xl border border-blue-500/30 p-4 hover-lift">
-                <div className="flex items-center gap-3 mb-2">
-                  <BookOpen className="w-8 h-8 text-blue-400" />
-                  <div>
-                    <p className="text-2xl font-bold text-white">{stats.journalEntries}</p>
-                    <p className="text-blue-300 text-sm">Entries</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              <div className="rounded-lg sm:rounded-xl bg-gradient-to-r from-blue-500/20 to-blue-600/20 backdrop-blur-xl border border-blue-500/30 p-3 sm:p-4 hover-lift">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400" />
+                  <div className="text-center sm:text-left">
+                    <p className="text-xl sm:text-2xl font-bold text-white">{stats.journalEntries}</p>
+                    <p className="text-blue-300 text-xs sm:text-sm">Entries</p>
                   </div>
                 </div>
               </div>
               
-              <div className="rounded-xl bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 backdrop-blur-xl border border-emerald-500/30 p-4 hover-lift">
-                <div className="flex items-center gap-3 mb-2">
-                  <Dumbbell className="w-8 h-8 text-emerald-400" />
-                  <div>
-                    <p className="text-2xl font-bold text-white">{stats.todayWorkouts}</p>
-                    <p className="text-emerald-300 text-sm">Workouts</p>
+              <div className="rounded-lg sm:rounded-xl bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 backdrop-blur-xl border border-emerald-500/30 p-3 sm:p-4 hover-lift">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <Dumbbell className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-400" />
+                  <div className="text-center sm:text-left">
+                    <p className="text-xl sm:text-2xl font-bold text-white">{stats.todayWorkouts}</p>
+                    <p className="text-emerald-300 text-xs sm:text-sm">Workouts</p>
                   </div>
                 </div>
               </div>
               
-              <div className="rounded-xl bg-gradient-to-r from-amber-500/20 to-amber-600/20 backdrop-blur-xl border border-amber-500/30 p-4 hover-lift">
-                <div className="flex items-center gap-3 mb-2">
-                  <Camera className="w-8 h-8 text-amber-400" />
-                  <div>
-                    <p className="text-2xl font-bold text-white">{stats.todayMeals}</p>
-                    <p className="text-amber-300 text-sm">Meals</p>
+              <div className="rounded-lg sm:rounded-xl bg-gradient-to-r from-amber-500/20 to-amber-600/20 backdrop-blur-xl border border-amber-500/30 p-3 sm:p-4 hover-lift">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <Camera className="w-6 h-6 sm:w-8 sm:h-8 text-amber-400" />
+                  <div className="text-center sm:text-left">
+                    <p className="text-xl sm:text-2xl font-bold text-white">{stats.todayMeals}</p>
+                    <p className="text-amber-300 text-xs sm:text-sm">Meals</p>
                   </div>
                 </div>
               </div>
               
-              <div className="rounded-xl bg-gradient-to-r from-pink-500/20 to-pink-600/20 backdrop-blur-xl border border-pink-500/30 p-4 hover-lift">
-                <div className="flex items-center gap-3 mb-2">
-                  <Heart className="w-8 h-8 text-pink-400" />
-                  <div>
-                    <p className="text-2xl font-bold text-white">{stats.upcomingReminders}</p>
-                    <p className="text-pink-300 text-sm">Reminders</p>
+              <div className="rounded-lg sm:rounded-xl bg-gradient-to-r from-pink-500/20 to-pink-600/20 backdrop-blur-xl border border-pink-500/30 p-3 sm:p-4 hover-lift">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <Heart className="w-6 h-6 sm:w-8 sm:h-8 text-pink-400" />
+                  <div className="text-center sm:text-left">
+                    <p className="text-xl sm:text-2xl font-bold text-white">{stats.upcomingReminders}</p>
+                    <p className="text-pink-300 text-xs sm:text-sm">Reminders</p>
                   </div>
                 </div>
               </div>
@@ -519,10 +519,10 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
           </div>
 
           {/* Right Sidebar */}
-          <div className="lg:col-span-4 space-y-6">
+          <div className="lg:col-span-4 space-y-4 sm:space-y-6">
             
             {/* Quick Notes */}
-            <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-6 hover-lift">
+            <div className="rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 sm:p-6 hover-lift">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
@@ -576,7 +576,7 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
 
             {/* Daily Wisdom */}
             <div className="max-w-7xl mx-auto">
-              <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-6 hover-lift">
+              <div className="rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 sm:p-6 hover-lift">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center">
@@ -621,9 +621,9 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
 
             {/* Daily Tracking & Todos Row */}
             <div className="max-w-7xl mx-auto">
-              <div className="grid grid-cols-1 gap-8">
+              <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8">
               {/* Daily Tracking Card */}
-              <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-6 hover-lift">
+              <div className="rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 sm:p-6 hover-lift">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center">
@@ -737,7 +737,7 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
               </div>
               
               {/* Daily Todos Card */}
-              <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-6 hover-lift">
+              <div className="rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 sm:p-6 hover-lift">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
@@ -826,18 +826,18 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
         </div>
 
         {/* Quick Actions */}
-        <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
-              <Zap className="w-6 h-6 text-white" />
+        <div className="rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 sm:p-6">
+          <div className="flex items-center gap-3 mb-4 sm:mb-6">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
+              <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Quick Actions</h2>
-              <p className="text-white/60 text-sm">Jump into your favorite activities</p>
+              <h2 className="text-lg sm:text-xl font-bold text-white">Quick Actions</h2>
+              <p className="text-white/60 text-xs sm:text-sm">Jump into your favorite activities</p>
             </div>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
             {[
               { icon: BookOpen, label: 'Journal', page: 'journal', color: 'from-blue-500 to-blue-600' },
               { icon: Dumbbell, label: 'Workout', page: 'workouts', color: 'from-emerald-500 to-emerald-600' },
@@ -848,13 +848,13 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
             ].map((action) => (
               <button
                 key={action.label}
-                className="group relative overflow-hidden rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 p-4 transition-all duration-300 hover:scale-105"
+                className="group relative overflow-hidden rounded-lg sm:rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 p-3 sm:p-4 transition-all duration-300 hover:scale-105 active:scale-95"
                 onClick={() => onPageChange?.(action.page)}
               >
-                <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${action.color} flex items-center justify-center mx-auto mb-3`}>
-                  <action.icon className="w-6 h-6 text-white" />
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-md sm:rounded-lg bg-gradient-to-r ${action.color} flex items-center justify-center mx-auto mb-2 sm:mb-3`}>
+                  <action.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <p className="text-white font-medium text-sm">{action.label}</p>
+                <p className="text-white font-medium text-xs sm:text-sm">{action.label}</p>
                 <div className="absolute inset-0 bg-gradient-to-r from-white/0 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </button>
             ))}

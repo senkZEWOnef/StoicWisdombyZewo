@@ -331,3 +331,83 @@ blockquote {
     width: 100%;
   }
 }
+
+/* Enhanced mobile optimizations */
+@media (max-width: 768px) {
+  /* Improve touch targets */
+  button, 
+  input, 
+  textarea, 
+  select {
+    min-height: 44px; /* Apple's recommended minimum touch target size */
+  }
+  
+  /* Better scrolling on mobile */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Disable hover effects on touch devices */
+  .hover-lift:hover,
+  .card:hover,
+  .btn:hover {
+    transform: none;
+    box-shadow: inherit;
+  }
+  
+  /* Add active states for better feedback */
+  button:active,
+  .btn:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+  }
+  
+  /* Improve text readability */
+  body {
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Improve form inputs on mobile */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+    border-radius: 8px;
+  }
+  
+  /* Better tap highlights */
+  * {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  }
+  
+  /* Improve spacing for mobile */
+  .container-fluid {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}
+
+/* Touch-friendly active states for touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .hover-lift:hover,
+  .card:hover {
+    transform: none;
+  }
+  
+  .hover-lift:active,
+  .card:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+  
+  /* Custom touch feedback for buttons */
+  button:active,
+  [role="button"]:active {
+    opacity: 0.8;
+    transform: scale(0.95);
+  }
+}

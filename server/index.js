@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
@@ -9,7 +10,10 @@ const PORT = 5001;
 const db = require("./database");
 const { authMiddleware, register, login } = require("./auth");
 
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:4173'],
+  credentials: true
+}));
 app.use(express.json());
 
 // Create uploads directory if it doesn't exist
@@ -98,398 +102,430 @@ app.post("/quote", (req, res) => {
 });
 
 // Journal entries
-app.get("/journal", authMiddleware, (req, res) => {
-  db.all(
-    "SELECT * FROM journal_entries WHERE user_id = ? ORDER BY created_at DESC",
-    [req.userId],
-    (err, rows) => {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json(rows);
-    }
-  );
+app.get("/journal", authMiddleware, async (req, res) => {
+  try {
+    const result = await db.query(
+      "SELECT * FROM journal_entries WHERE user_id = $1 ORDER BY created_at DESC",
+      [req.userId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
-app.post("/journal", authMiddleware, (req, res) => {
+app.post("/journal", authMiddleware, async (req, res) => {
   const { content } = req.body;
-  db.run(
-    "INSERT INTO journal_entries (user_id, content) VALUES (?, ?)",
-    [req.userId, content],
-    function(err) {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json({ id: this.lastID, message: "Journal entry created" });
-    }
-  );
+  console.log('Journal POST request:', { userId: req.userId, content });
+  try {
+    const result = await db.query(
+      "INSERT INTO journal_entries (user_id, content) VALUES ($1, $2) RETURNING id",
+      [req.userId, content]
+    );
+    console.log('Journal entry created:', result.rows[0]);
+    res.json({ id: result.rows[0].id, message: "Journal entry created" });
+  } catch (err) {
+    console.error('Journal POST error:', err);
+    res.status(500).json({ error: "Server error", details: err.message });
+  }
 });
 
 // Ideas
-app.get("/ideas", authMiddleware, (req, res) => {
-  db.all(
-    "SELECT * FROM ideas WHERE user_id = ? ORDER BY created_at DESC",
-    [req.userId],
-    (err, rows) => {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json(rows);
-    }
-  );
+app.get("/ideas", authMiddleware, async (req, res) => {
+  try {
+    const result = await db.query(
+      "SELECT * FROM ideas WHERE user_id = $1 ORDER BY created_at DESC",
+      [req.userId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
-app.post("/ideas", authMiddleware, (req, res) => {
+app.post("/ideas", authMiddleware, async (req, res) => {
   const { title, content, category } = req.body;
-  db.run(
-    "INSERT INTO ideas (user_id, title, content, category) VALUES (?, ?, ?, ?)",
-    [req.userId, title, content, category || 'general'],
-    function(err) {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json({ id: this.lastID, message: "Idea saved" });
-    }
-  );
+  try {
+    const result = await db.query(
+      "INSERT INTO ideas (user_id, title, content, category) VALUES ($1, $2, $3, $4) RETURNING id",
+      [req.userId, title, content, category || 'general']
+    );
+    res.json({ id: result.rows[0].id, message: "Idea saved" });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 // Reminders
-app.get("/reminders", authMiddleware, (req, res) => {
-  db.all(
-    "SELECT * FROM reminders WHERE user_id = ? ORDER BY reminder_date ASC",
-    [req.userId],
-    (err, rows) => {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json(rows);
-    }
-  );
+app.get("/reminders", authMiddleware, async (req, res) => {
+  try {
+    const result = await db.query(
+      "SELECT * FROM reminders WHERE user_id = $1 ORDER BY reminder_date ASC",
+      [req.userId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
-app.post("/reminders", authMiddleware, (req, res) => {
+app.post("/reminders", authMiddleware, async (req, res) => {
   const { title, description, reminder_date } = req.body;
-  db.run(
-    "INSERT INTO reminders (user_id, title, description, reminder_date) VALUES (?, ?, ?, ?)",
-    [req.userId, title, description, reminder_date],
-    function(err) {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json({ id: this.lastID, message: "Reminder created" });
-    }
-  );
+  try {
+    const result = await db.query(
+      "INSERT INTO reminders (user_id, title, description, reminder_date) VALUES ($1, $2, $3, $4) RETURNING id",
+      [req.userId, title, description, reminder_date]
+    );
+    res.json({ id: result.rows[0].id, message: "Reminder created" });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
-app.put("/reminders/:id", authMiddleware, (req, res) => {
+app.put("/reminders/:id", authMiddleware, async (req, res) => {
   const { completed } = req.body;
-  db.run(
-    "UPDATE reminders SET completed = ? WHERE id = ? AND user_id = ?",
-    [completed, req.params.id, req.userId],
-    function(err) {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json({ message: "Reminder updated" });
-    }
-  );
+  try {
+    await db.query(
+      "UPDATE reminders SET completed = $1 WHERE id = $2 AND user_id = $3",
+      [completed, req.params.id, req.userId]
+    );
+    res.json({ message: "Reminder updated" });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 // Events/Schedule
-app.get("/events", authMiddleware, (req, res) => {
-  db.all(
-    "SELECT * FROM events WHERE user_id = ? ORDER BY start_time ASC",
-    [req.userId],
-    (err, rows) => {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json(rows);
-    }
-  );
+app.get("/events", authMiddleware, async (req, res) => {
+  try {
+    const result = await db.query(
+      "SELECT * FROM events WHERE user_id = $1 ORDER BY start_time ASC",
+      [req.userId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
-app.post("/events", authMiddleware, (req, res) => {
+app.post("/events", authMiddleware, async (req, res) => {
   const { title, description, start_time, end_time, event_type } = req.body;
-  db.run(
-    "INSERT INTO events (user_id, title, description, start_time, end_time, event_type) VALUES (?, ?, ?, ?, ?, ?)",
-    [req.userId, title, description, start_time, end_time, event_type || 'meeting'],
-    function(err) {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json({ id: this.lastID, message: "Event created" });
-    }
-  );
+  try {
+    const result = await db.query(
+      "INSERT INTO events (user_id, title, description, start_time, end_time, event_type) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
+      [req.userId, title, description, start_time, end_time, event_type || 'meeting']
+    );
+    res.json({ id: result.rows[0].id, message: "Event created" });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 // Mood tracking
-app.get("/mood-entries", authMiddleware, (req, res) => {
-  db.all(
-    "SELECT * FROM mood_entries WHERE user_id = ? ORDER BY created_at DESC",
-    [req.userId],
-    (err, rows) => {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json(rows);
-    }
-  );
+app.get("/mood-entries", authMiddleware, async (req, res) => {
+  try {
+    const result = await db.query(
+      "SELECT * FROM mood_entries WHERE user_id = $1 ORDER BY created_at DESC",
+      [req.userId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
-app.post("/mood", authMiddleware, (req, res) => {
+app.post("/mood", authMiddleware, async (req, res) => {
   const { mood, energy_level, notes } = req.body;
   const quotes = moodQuotes[mood.toLowerCase()];
   const stoic_quote = quotes ? quotes[Math.floor(Math.random() * quotes.length)] : null;
   
-  db.run(
-    "INSERT INTO mood_entries (user_id, mood, energy_level, notes, stoic_quote) VALUES (?, ?, ?, ?, ?)",
-    [req.userId, mood, energy_level, notes, stoic_quote],
-    function(err) {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json({ id: this.lastID, quote: stoic_quote, message: "Mood logged" });
-    }
-  );
+  try {
+    const result = await db.query(
+      "INSERT INTO mood_entries (user_id, mood, energy_level, notes, stoic_quote) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+      [req.userId, mood, energy_level, notes, stoic_quote]
+    );
+    res.json({ id: result.rows[0].id, quote: stoic_quote, message: "Mood logged" });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 // Poetry
-app.get("/poetry", authMiddleware, (req, res) => {
-  db.all(
-    "SELECT * FROM poetry WHERE user_id = ? ORDER BY created_at DESC",
-    [req.userId],
-    (err, rows) => {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json(rows);
-    }
-  );
+app.get("/poetry", authMiddleware, async (req, res) => {
+  try {
+    const result = await db.query(
+      "SELECT * FROM poetry WHERE user_id = $1 ORDER BY created_at DESC",
+      [req.userId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
-app.post("/poetry", authMiddleware, (req, res) => {
+app.post("/poetry", authMiddleware, async (req, res) => {
   const { title, content, language } = req.body;
-  db.run(
-    "INSERT INTO poetry (user_id, title, content, language) VALUES (?, ?, ?, ?)",
-    [req.userId, title, content, language || 'en'],
-    function(err) {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json({ id: this.lastID, message: "Poem saved" });
-    }
-  );
+  try {
+    const result = await db.query(
+      "INSERT INTO poetry (user_id, title, content, language) VALUES ($1, $2, $3, $4) RETURNING id",
+      [req.userId, title, content, language || 'en']
+    );
+    res.json({ id: result.rows[0].id, message: "Poem saved" });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 // Poetry ideas
-app.get("/poetry-ideas", authMiddleware, (req, res) => {
-  db.all(
-    "SELECT * FROM poetry_ideas WHERE user_id = ? ORDER BY created_at DESC",
-    [req.userId],
-    (err, rows) => {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json(rows);
-    }
-  );
+app.get("/poetry-ideas", authMiddleware, async (req, res) => {
+  try {
+    const result = await db.query(
+      "SELECT * FROM poetry_ideas WHERE user_id = $1 ORDER BY created_at DESC",
+      [req.userId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
-app.post("/poetry-ideas", authMiddleware, (req, res) => {
+app.post("/poetry-ideas", authMiddleware, async (req, res) => {
   const { idea, inspiration } = req.body;
-  db.run(
-    "INSERT INTO poetry_ideas (user_id, idea, inspiration) VALUES (?, ?, ?)",
-    [req.userId, idea, inspiration || ''],
-    function(err) {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json({ id: this.lastID, message: "Poetry idea saved" });
-    }
-  );
+  try {
+    const result = await db.query(
+      "INSERT INTO poetry_ideas (user_id, idea, inspiration) VALUES ($1, $2, $3) RETURNING id",
+      [req.userId, idea, inspiration || '']
+    );
+    res.json({ id: result.rows[0].id, message: "Poetry idea saved" });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 // Workouts
-app.get("/workouts", authMiddleware, (req, res) => {
-  db.all(
-    "SELECT * FROM workouts WHERE user_id = ? ORDER BY target_date DESC",
-    [req.userId],
-    (err, workouts) => {
-      if (err) return res.status(500).json({ error: "Server error" });
-      
-      // Get exercises for each workout
-      const workoutPromises = workouts.map(workout => {
-        return new Promise((resolve) => {
-          db.all(
-            "SELECT * FROM workout_exercises WHERE workout_id = ? ORDER BY order_index",
-            [workout.id],
-            (err, exercises) => {
-              resolve({
-                ...workout,
-                exercises: err ? [] : exercises
-              });
-            }
-          );
-        });
-      });
-      
-      Promise.all(workoutPromises)
-        .then(workoutsWithExercises => res.json(workoutsWithExercises));
-    }
-  );
+app.get("/workouts", authMiddleware, async (req, res) => {
+  try {
+    const workoutsResult = await db.query(
+      "SELECT * FROM workouts WHERE user_id = $1 ORDER BY target_date DESC",
+      [req.userId]
+    );
+    
+    // Get exercises for each workout
+    const workoutPromises = workoutsResult.rows.map(async workout => {
+      try {
+        const exercisesResult = await db.query(
+          "SELECT * FROM workout_exercises WHERE workout_id = $1 ORDER BY order_index",
+          [workout.id]
+        );
+        return {
+          ...workout,
+          exercises: exercisesResult.rows
+        };
+      } catch (err) {
+        return {
+          ...workout,
+          exercises: []
+        };
+      }
+    });
+    
+    const workoutsWithExercises = await Promise.all(workoutPromises);
+    res.json(workoutsWithExercises);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
-app.post("/workouts", authMiddleware, (req, res) => {
+app.post("/workouts", authMiddleware, async (req, res) => {
   const { name, description, target_date, target_time, recurring_type, recurring_days, reminder_enabled, reminder_minutes, exercises } = req.body;
   
-  db.run(
-    "INSERT INTO workouts (user_id, name, description, target_date, target_time, recurring_type, recurring_days, reminder_enabled, reminder_minutes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-    [req.userId, name, description, target_date, target_time, recurring_type || 'none', recurring_days || '', reminder_enabled !== false, reminder_minutes || 15],
-    function(err) {
-      if (err) return res.status(500).json({ error: "Server error" });
-      
-      const workoutId = this.lastID;
-      
-      // Insert exercises if provided
-      if (exercises && exercises.length > 0) {
+  try {
+    const workoutResult = await db.query(
+      "INSERT INTO workouts (user_id, name, description, target_date, target_time, recurring_type, recurring_days, reminder_enabled, reminder_minutes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id",
+      [req.userId, name, description, target_date, target_time, recurring_type || 'none', recurring_days || '', reminder_enabled !== false, reminder_minutes || 15]
+    );
+    
+    const workoutId = workoutResult.rows[0].id;
+    
+    // Insert exercises if provided
+    if (exercises && exercises.length > 0) {
+      try {
         const exercisePromises = exercises.map((exercise, index) => {
-          return new Promise((resolve, reject) => {
-            db.run(
-              "INSERT INTO workout_exercises (workout_id, exercise_name, sets, reps, weight, duration, distance, notes, order_index) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-              [workoutId, exercise.exercise_name, exercise.sets, exercise.reps, exercise.weight, exercise.duration, exercise.distance, exercise.notes, index],
-              (err) => {
-                if (err) reject(err);
-                else resolve(true);
-              }
-            );
-          });
+          return db.query(
+            "INSERT INTO workout_exercises (workout_id, exercise_name, sets, reps, weight, duration, distance, notes, order_index) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+            [workoutId, exercise.exercise_name, exercise.sets, exercise.reps, exercise.weight, exercise.duration, exercise.distance, exercise.notes, index]
+          );
         });
         
-        Promise.all(exercisePromises)
-          .then(() => res.json({ id: workoutId, message: "Workout created with exercises" }))
-          .catch(() => res.status(500).json({ error: "Error adding exercises" }));
-      } else {
-        res.json({ id: workoutId, message: "Workout created" });
+        await Promise.all(exercisePromises);
+        res.json({ id: workoutId, message: "Workout created with exercises" });
+      } catch (exerciseError) {
+        res.status(500).json({ error: "Error adding exercises" });
       }
+    } else {
+      res.json({ id: workoutId, message: "Workout created" });
     }
-  );
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
-app.put("/workouts/:id/complete", authMiddleware, (req, res) => {
+app.put("/workouts/:id/complete", authMiddleware, async (req, res) => {
   const { duration, calories_burned, notes } = req.body;
-  db.run(
-    "UPDATE workouts SET completed = TRUE, completion_date = CURRENT_TIMESTAMP, duration = ?, calories_burned = ?, notes = ? WHERE id = ? AND user_id = ?",
-    [duration, calories_burned, notes, req.params.id, req.userId],
-    function(err) {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json({ message: "Workout completed" });
-    }
-  );
+  try {
+    await db.query(
+      "UPDATE workouts SET completed = TRUE, completion_date = CURRENT_TIMESTAMP, duration = $1, calories_burned = $2, notes = $3 WHERE id = $4 AND user_id = $5",
+      [duration, calories_burned, notes, req.params.id, req.userId]
+    );
+    res.json({ message: "Workout completed" });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 // Meals
-app.get("/meals", authMiddleware, (req, res) => {
-  db.all(
-    "SELECT * FROM meals WHERE user_id = ? ORDER BY meal_time DESC",
-    [req.userId],
-    (err, rows) => {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json(rows);
-    }
-  );
+app.get("/meals", authMiddleware, async (req, res) => {
+  try {
+    const result = await db.query(
+      "SELECT * FROM meals WHERE user_id = $1 ORDER BY meal_time DESC",
+      [req.userId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
-app.post("/meals", authMiddleware, upload.single('photo'), (req, res) => {
+app.post("/meals", authMiddleware, upload.single('photo'), async (req, res) => {
   const { meal_name, description, calories, meal_time } = req.body;
   const photo_path = req.file ? req.file.filename : null;
   
-  db.run(
-    "INSERT INTO meals (user_id, meal_name, description, calories, photo_path, meal_time) VALUES (?, ?, ?, ?, ?, ?)",
-    [req.userId, meal_name, description, calories, photo_path, meal_time || new Date().toISOString()],
-    function(err) {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json({ id: this.lastID, message: "Meal logged" });
-    }
-  );
+  try {
+    const result = await db.query(
+      "INSERT INTO meals (user_id, meal_name, description, calories, photo_path, meal_time) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
+      [req.userId, meal_name, description, calories, photo_path, meal_time || new Date().toISOString()]
+    );
+    res.json({ id: result.rows[0].id, message: "Meal logged" });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 // Notes
-app.get("/notes", authMiddleware, (req, res) => {
-  db.all(
-    "SELECT * FROM notes WHERE user_id = ? ORDER BY updated_at DESC",
-    [req.userId],
-    (err, rows) => {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json(rows);
-    }
-  );
+app.get("/notes", authMiddleware, async (req, res) => {
+  try {
+    const result = await db.query(
+      "SELECT * FROM notes WHERE user_id = $1 ORDER BY updated_at DESC",
+      [req.userId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
-app.post("/notes", authMiddleware, (req, res) => {
+app.post("/notes", authMiddleware, async (req, res) => {
   const { title, content, category, tags } = req.body;
-  db.run(
-    "INSERT INTO notes (user_id, title, content, category, tags) VALUES (?, ?, ?, ?, ?)",
-    [req.userId, title, content, category || 'general', tags || ''],
-    function(err) {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json({ id: this.lastID, message: "Note saved" });
-    }
-  );
+  try {
+    const result = await db.query(
+      "INSERT INTO notes (user_id, title, content, category, tags) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+      [req.userId, title, content, category || 'general', tags || '']
+    );
+    res.json({ id: result.rows[0].id, message: "Note saved" });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 // Daily goals
-app.get("/goals/:date", authMiddleware, (req, res) => {
-  db.get(
-    "SELECT * FROM daily_goals WHERE user_id = ? AND goal_date = ?",
-    [req.userId, req.params.date],
-    (err, row) => {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json(row || {});
-    }
-  );
+app.get("/goals/:date", authMiddleware, async (req, res) => {
+  try {
+    const result = await db.query(
+      "SELECT * FROM daily_goals WHERE user_id = $1 AND goal_date = $2",
+      [req.userId, req.params.date]
+    );
+    res.json(result.rows[0] || {});
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
-app.post("/goals", authMiddleware, (req, res) => {
+app.post("/goals", authMiddleware, async (req, res) => {
   const { goal_date, calorie_goal, water_goal, exercise_goal } = req.body;
-  db.run(
-    "INSERT OR REPLACE INTO daily_goals (user_id, goal_date, calorie_goal, water_goal, exercise_goal, updated_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)",
-    [req.userId, goal_date, calorie_goal, water_goal, exercise_goal],
-    function(err) {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json({ message: "Goals updated" });
-    }
-  );
+  try {
+    await db.query(
+      "INSERT INTO daily_goals (user_id, goal_date, calorie_goal, water_goal, exercise_goal, updated_at) VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP) ON CONFLICT (user_id, goal_date) DO UPDATE SET calorie_goal = EXCLUDED.calorie_goal, water_goal = EXCLUDED.water_goal, exercise_goal = EXCLUDED.exercise_goal, updated_at = CURRENT_TIMESTAMP",
+      [req.userId, goal_date, calorie_goal, water_goal, exercise_goal]
+    );
+    res.json({ message: "Goals updated" });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 // Daily todos
-app.get("/todos/daily", authMiddleware, (req, res) => {
+app.get("/todos/daily", authMiddleware, async (req, res) => {
   const today = new Date().toISOString().split('T')[0];
-  db.all(
-    "SELECT * FROM daily_todos WHERE user_id = ? AND date = ? ORDER BY created_at ASC",
-    [req.userId, today],
-    (err, rows) => {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json(rows);
-    }
-  );
+  try {
+    const result = await db.query(
+      "SELECT * FROM daily_todos WHERE user_id = $1 AND date = $2 ORDER BY created_at ASC",
+      [req.userId, today]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
-app.post("/todos", authMiddleware, (req, res) => {
+app.post("/todos", authMiddleware, async (req, res) => {
   const { text, date } = req.body;
-  db.run(
-    "INSERT INTO daily_todos (user_id, text, date) VALUES (?, ?, ?)",
-    [req.userId, text, date || new Date().toISOString().split('T')[0]],
-    function(err) {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json({ id: this.lastID, text, completed: false, message: "Todo created" });
-    }
-  );
+  try {
+    const result = await db.query(
+      "INSERT INTO daily_todos (user_id, text, date) VALUES ($1, $2, $3) RETURNING id",
+      [req.userId, text, date || new Date().toISOString().split('T')[0]]
+    );
+    res.json({ id: result.rows[0].id, text, completed: false, message: "Todo created" });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
-app.put("/todos/:id/toggle", authMiddleware, (req, res) => {
-  db.run(
-    "UPDATE daily_todos SET completed = NOT completed WHERE id = ? AND user_id = ?",
-    [req.params.id, req.userId],
-    function(err) {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json({ message: "Todo toggled" });
-    }
-  );
+app.put("/todos/:id/toggle", authMiddleware, async (req, res) => {
+  try {
+    await db.query(
+      "UPDATE daily_todos SET completed = NOT completed WHERE id = $1 AND user_id = $2",
+      [req.params.id, req.userId]
+    );
+    res.json({ message: "Todo toggled" });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
-app.delete("/todos/:id", authMiddleware, (req, res) => {
-  db.run(
-    "DELETE FROM daily_todos WHERE id = ? AND user_id = ?",
-    [req.params.id, req.userId],
-    function(err) {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json({ message: "Todo deleted" });
-    }
-  );
+app.delete("/todos/:id", authMiddleware, async (req, res) => {
+  try {
+    await db.query(
+      "DELETE FROM daily_todos WHERE id = $1 AND user_id = $2",
+      [req.params.id, req.userId]
+    );
+    res.json({ message: "Todo deleted" });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 // Daily tracking
-app.post("/daily-tracking", authMiddleware, (req, res) => {
+app.post("/daily-tracking", authMiddleware, async (req, res) => {
   const { daily_steps, calories_consumed, date } = req.body;
-  db.run(
-    "INSERT OR REPLACE INTO daily_goals (user_id, goal_date, daily_steps, calorie_goal, updated_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)",
-    [req.userId, date, daily_steps, calories_consumed],
-    function(err) {
-      if (err) return res.status(500).json({ error: "Server error" });
-      res.json({ message: "Daily tracking updated" });
-    }
-  );
+  try {
+    await db.query(
+      "INSERT INTO daily_goals (user_id, goal_date, daily_steps, calorie_goal, updated_at) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP) ON CONFLICT (user_id, goal_date) DO UPDATE SET daily_steps = EXCLUDED.daily_steps, calorie_goal = EXCLUDED.calorie_goal, updated_at = CURRENT_TIMESTAMP",
+      [req.userId, date, daily_steps, calories_consumed]
+    );
+    res.json({ message: "Daily tracking updated" });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 app.listen(PORT, () => {

@@ -154,50 +154,50 @@ const PremiumJournal: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-4 md:p-6 lg:p-8">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-2 sm:p-4 md:p-6 lg:p-8">
+      <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
         
         {/* Header */}
-        <div className="text-center space-y-4">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center">
-              <BookOpen className="w-8 h-8 text-white" />
+        <div className="text-center space-y-3 sm:space-y-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-3 sm:mb-4">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center">
+              <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold text-white">My Journal</h1>
-              <p className="text-white/70">Capture your thoughts, dreams, and reflections</p>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">My Journal</h1>
+              <p className="text-white/70 text-sm sm:text-base">Capture your thoughts, dreams, and reflections</p>
             </div>
           </div>
         </div>
 
         {/* New Entry Section */}
-        <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-8 hover-lift">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 flex items-center justify-center">
-              <Plus className="w-6 h-6 text-white" />
+        <div className="rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 sm:p-6 lg:p-8 hover-lift">
+          <div className="flex items-center gap-3 mb-4 sm:mb-6">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 flex items-center justify-center">
+              <Plus className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white">New Entry</h2>
-              <p className="text-white/60">What's on your mind today?</p>
+              <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">New Entry</h2>
+              <p className="text-white/60 text-sm sm:text-base">What's on your mind today?</p>
             </div>
           </div>
           
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <textarea
               value={newEntry}
               onChange={(e) => setNewEntry(e.target.value)}
               placeholder="Write about your day, your feelings, your dreams, or anything that comes to mind..."
-              className="w-full h-40 bg-white/10 border border-white/20 rounded-xl p-4 text-white placeholder-white/50 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="w-full h-32 sm:h-40 bg-white/10 border border-white/20 rounded-lg sm:rounded-xl p-3 sm:p-4 text-white placeholder-white/50 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm sm:text-base"
             />
             
-            <div className="flex justify-between items-center">
-              <p className="text-white/60 text-sm">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+              <p className="text-white/60 text-xs sm:text-sm">
                 {newEntry.length} characters
               </p>
               <button
                 onClick={saveEntry}
                 disabled={saving || !newEntry.trim()}
-                className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-200 flex items-center gap-2"
+                className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg sm:rounded-xl transition-all duration-200 flex items-center justify-center gap-2 active:scale-95 text-sm sm:text-base"
               >
                 {saving ? (
                   <>
