@@ -166,10 +166,23 @@ db.serialize(() => {
     calorie_goal INTEGER,
     water_goal INTEGER DEFAULT 8,
     exercise_goal TEXT,
+    daily_steps INTEGER DEFAULT 0,
+    steps_goal INTEGER DEFAULT 10000,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users (id),
     UNIQUE(user_id, goal_date)
+  )`);
+
+  // Daily todos table
+  db.run(`CREATE TABLE IF NOT EXISTS daily_todos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    completed BOOLEAN DEFAULT FALSE,
+    date DATE NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users (id)
   )`);
 });
 

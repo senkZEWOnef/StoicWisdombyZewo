@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { 
-  Target, Heart, BookOpen, Dumbbell, Camera, Plus, 
-  Sparkles, Sun, Moon, Edit3, Save, X, Activity, Brain, 
-  Smile, Star, Zap, Footprints, Flame, CheckSquare,
+  Calendar, Target, Heart, BookOpen, Dumbbell, Camera, Plus, ArrowRight, 
+  Sparkles, Sun, Moon, Edit3, Save, X, TrendingUp, Activity, Brain, 
+  Smile, ChevronRight, Star, Zap, Award, Footprints, Flame, CheckSquare,
   Square, Trash2
 } from 'lucide-react';
 
@@ -621,7 +621,7 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
 
             {/* Daily Tracking & Todos Row */}
             <div className="max-w-7xl mx-auto">
-              <div className="grid grid-cols-1 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Daily Tracking Card */}
               <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-6 hover-lift">
                 <div className="flex items-center justify-between mb-4">
@@ -845,7 +845,7 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
               { icon: Target, label: 'Goals', page: 'goals', color: 'from-cyan-500 to-blue-600' },
               { icon: Plus, label: 'Ideas', page: 'ideas', color: 'from-purple-500 to-purple-600' },
               { icon: Smile, label: 'Mood', page: 'mood', color: 'from-pink-500 to-pink-600' },
-            ].map((action) => (
+            ].map((action, index) => (
               <button
                 key={action.label}
                 className="group relative overflow-hidden rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 p-4 transition-all duration-300 hover:scale-105"

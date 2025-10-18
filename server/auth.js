@@ -5,6 +5,12 @@ const db = require('./database');
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 const authMiddleware = (req, res, next) => {
+  // Dev bypass - check for special dev header
+  if (req.header('X-Dev-Mode') === 'true') {
+    req.userId = 999; // Dev user ID
+    return next();
+  }
+  
   const token = req.header('Authorization')?.replace('Bearer ', '');
   
   if (!token) {

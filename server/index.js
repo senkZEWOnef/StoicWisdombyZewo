@@ -432,6 +432,66 @@ app.post("/goals", authMiddleware, (req, res) => {
   );
 });
 
+// Daily todos
+app.get("/todos/daily", authMiddleware, (req, res) => {
+  const today = new Date().toISOString().split('T')[0];
+  db.all(
+    "SELECT * FROM daily_todos WHERE user_id = ? AND date = ? ORDER BY created_at ASC",
+    [req.userId, today],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: "Server error" });
+      res.json(rows);
+    }
+  );
+});
+
+app.post("/todos", authMiddleware, (req, res) => {
+  const { text, date } = req.body;
+  db.run(
+    "INSERT INTO daily_todos (user_id, text, date) VALUES (?, ?, ?)",
+    [req.userId, text, date || new Date().toISOString().split('T')[0]],
+    function(err) {
+      if (err) return res.status(500).json({ error: "Server error" });
+      res.json({ id: this.lastID, text, completed: false, message: "Todo created" });
+    }
+  );
+});
+
+app.put("/todos/:id/toggle", authMiddleware, (req, res) => {
+  db.run(
+    "UPDATE daily_todos SET completed = NOT completed WHERE id = ? AND user_id = ?",
+    [req.params.id, req.userId],
+    function(err) {
+      if (err) return res.status(500).json({ error: "Server error" });
+      res.json({ message: "Todo toggled" });
+    }
+  );
+});
+
+app.delete("/todos/:id", authMiddleware, (req, res) => {
+  db.run(
+    "DELETE FROM daily_todos WHERE id = ? AND user_id = ?",
+    [req.params.id, req.userId],
+    function(err) {
+      if (err) return res.status(500).json({ error: "Server error" });
+      res.json({ message: "Todo deleted" });
+    }
+  );
+});
+
+// Daily tracking
+app.post("/daily-tracking", authMiddleware, (req, res) => {
+  const { daily_steps, calories_consumed, date } = req.body;
+  db.run(
+    "INSERT OR REPLACE INTO daily_goals (user_id, goal_date, daily_steps, calorie_goal, updated_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)",
+    [req.userId, date, daily_steps, calories_consumed],
+    function(err) {
+      if (err) return res.status(500).json({ error: "Server error" });
+      res.json({ message: "Daily tracking updated" });
+    }
+  );
+});
+
 app.listen(PORT, () => {
   console.log(`✅ Personal Development Journal API running at http://localhost:${PORT}`);
 });
