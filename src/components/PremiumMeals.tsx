@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { 
   Camera, Plus, Target, Flame, Clock, X, Save, 
   TrendingUp, Coffee, Sunrise, Sun, Moon, Search,
-  UtensilsCrossed, Award, ChefHat, Apple
+  UtensilsCrossed, Award, ChefHat, Apple, Trash2
 } from 'lucide-react';
 
 interface Meal {
@@ -48,6 +48,7 @@ const PremiumMeals: React.FC = () => {
   const [analysisResult, setAnalysisResult] = useState<{calories: number, foods: string[]} | null>(null);
   
   // Filter states
+  const [deleting, setDeleting] = useState<number | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [mealTimeFilter, setMealTimeFilter] = useState<'all' | 'breakfast' | 'lunch' | 'dinner' | 'snack'>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -280,6 +281,33 @@ const PremiumMeals: React.FC = () => {
       console.error('Error saving meal:', error);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const deleteMeal = async (mealId: number) => {
+    if (!window.confirm('Are you sure you want to delete this meal?')) return;
+    
+    setDeleting(mealId);
+    try {
+      const response = await fetch(`http://localhost:5001/meals/${mealId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        fetchMeals();
+      } else {
+        console.error('Delete failed with status:', response.status);
+        const errorData = await response.text();
+        console.error('Error response:', errorData);
+      }
+    } catch (error) {
+      console.error('Error deleting meal:', error);
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -874,7 +902,18 @@ const PremiumMeals: React.FC = () => {
                           alt={meal.meal_name}
                           className="w-full h-full object-cover"
                         />
-                        <div className="absolute top-4 right-4">
+                        <div className="absolute top-4 right-4 flex items-center gap-2">
+                          <button
+                            onClick={() => deleteMeal(meal.id)}
+                            disabled={deleting === meal.id}
+                            className="w-8 h-8 bg-red-500/80 hover:bg-red-600/80 disabled:opacity-50 backdrop-blur-sm text-white rounded-full transition-colors flex items-center justify-center"
+                          >
+                            {deleting === meal.id ? (
+                              <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin"></div>
+                            ) : (
+                              <Trash2 className="w-3 h-3" />
+                            )}
+                          </button>
                           <span className="px-3 py-1 bg-black/50 backdrop-blur-sm text-white rounded-full text-sm font-medium">
                             <Flame className="w-3 h-3 inline mr-1" />
                             {meal.calories} cal

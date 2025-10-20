@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { Plus, BookOpen, Calendar, Edit, Save, X, Search, Heart } from 'lucide-react';
+import { Plus, BookOpen, Calendar, Edit, Save, X, Search, Heart, Trash2 } from 'lucide-react';
 
 interface JournalEntry {
   id: number;
@@ -10,7 +9,6 @@ interface JournalEntry {
 }
 
 const PremiumJournal: React.FC = () => {
-  const { token } = useAuth();
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [newEntry, setNewEntry] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -28,7 +26,6 @@ const PremiumJournal: React.FC = () => {
     try {
       const response = await fetch('http://localhost:5001/journal', {
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
@@ -52,7 +49,6 @@ const PremiumJournal: React.FC = () => {
       const response = await fetch('http://localhost:5001/journal', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ content: newEntry })
@@ -81,7 +77,6 @@ const PremiumJournal: React.FC = () => {
       const response = await fetch(`http://localhost:5001/journal/${editingId}`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ content: editContent })
@@ -100,6 +95,25 @@ const PremiumJournal: React.FC = () => {
   const cancelEdit = () => {
     setEditingId(null);
     setEditContent('');
+  };
+
+  const deleteEntry = async (entryId: number) => {
+    if (!confirm('Are you sure you want to delete this journal entry?')) return;
+    
+    try {
+      const response = await fetch(`http://localhost:5001/journal/${entryId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        fetchEntries();
+      }
+    } catch (error) {
+      console.error('Error deleting entry:', error);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -290,13 +304,23 @@ const PremiumJournal: React.FC = () => {
                         </div>
                       </div>
                       
-                      <button
-                        onClick={() => startEdit(entry)}
-                        disabled={editingId === entry.id}
-                        className="p-2 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50"
-                      >
-                        <Edit className="w-5 h-5 text-white/60" />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => startEdit(entry)}
+                          disabled={editingId === entry.id}
+                          className="p-2 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50"
+                        >
+                          <Edit className="w-5 h-5 text-white/60" />
+                        </button>
+                        <button
+                          onClick={() => deleteEntry(entry.id)}
+                          disabled={editingId === entry.id}
+                          className="p-2 hover:bg-red-500/20 rounded-lg transition-colors disabled:opacity-50"
+                          title="Delete entry"
+                        >
+                          <Trash2 className="w-5 h-5 text-red-400 hover:text-red-300" />
+                        </button>
+                      </div>
                     </div>
                     
                     {editingId === entry.id ? (

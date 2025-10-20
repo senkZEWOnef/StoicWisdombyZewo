@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Dumbbell, Plus, CheckCircle, Calendar, Timer, Flame, Save, X, TrendingUp, Target, Award, Activity, Search } from 'lucide-react';
+import { Dumbbell, Plus, CheckCircle, Calendar, Timer, Flame, Save, X, TrendingUp, Target, Award, Activity, Search, Trash2 } from 'lucide-react';
 
 interface Workout {
   id: number;
@@ -36,6 +36,7 @@ const PremiumWorkouts: React.FC = () => {
   // Filter states
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [deleting, setDeleting] = useState<number | null>(null);
 
   const workoutTypes = [
     // Cardio
@@ -162,6 +163,33 @@ const PremiumWorkouts: React.FC = () => {
       console.error('Error completing workout:', error);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const deleteWorkout = async (workoutId: number) => {
+    if (!window.confirm('Are you sure you want to delete this workout?')) return;
+    
+    setDeleting(workoutId);
+    try {
+      const response = await fetch(`http://localhost:5001/workouts/${workoutId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        fetchWorkouts();
+      } else {
+        console.error('Delete failed with status:', response.status);
+        const errorData = await response.text();
+        console.error('Error response:', errorData);
+      }
+    } catch (error) {
+      console.error('Error deleting workout:', error);
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -532,6 +560,19 @@ const PremiumWorkouts: React.FC = () => {
                           Complete
                         </button>
                       )}
+                      
+                      <button
+                        onClick={() => deleteWorkout(workout.id)}
+                        disabled={deleting === workout.id}
+                        className="px-4 py-2 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white rounded-lg transition-colors flex items-center gap-2"
+                      >
+                        {deleting === workout.id ? (
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
+                        Delete
+                      </button>
                     </div>
 
                     {workout.description && (

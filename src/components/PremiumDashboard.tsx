@@ -4,7 +4,8 @@ import {
   Target, Heart, BookOpen, Dumbbell, Camera, Plus, 
   Sparkles, Sun, Moon, Edit3, Save, X, Activity, Brain, 
   Smile, Star, Zap, Footprints, Flame, CheckSquare,
-  Square, Trash2
+  Square, Trash2, Droplets, Book, FileText, Lightbulb,
+  ChevronLeft, ChevronRight, Calendar
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -13,10 +14,21 @@ interface DashboardStats {
   todayMeals: number;
   weeklyMoodAverage: number;
   upcomingReminders: number;
-  calorieGoal: number;
-  caloriesConsumed: number;
+  caloriesIn: number;
+  caloriesOut: number;
   dailySteps: number;
   stepsGoal: number;
+  waterOz: number;
+  waterGoal: number;
+}
+
+interface Todo {
+  id: number;
+  text: string;
+  completed: boolean;
+  category: 'work' | 'habits';
+  date: string;
+  created_at: string;
 }
 
 interface PremiumDashboardProps {
@@ -31,28 +43,46 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
     todayMeals: 0,
     weeklyMoodAverage: 0,
     upcomingReminders: 0,
-    calorieGoal: 2000,
-    caloriesConsumed: 0,
+    caloriesIn: 0,
+    caloriesOut: 0,
     dailySteps: 0,
-    stepsGoal: 10000
+    stepsGoal: 10000,
+    waterOz: 0,
+    waterGoal: 64
   });
   const [dailyQuote, setDailyQuote] = useState('');
   const [loading, setLoading] = useState(true);
-  const [quickNote, setQuickNote] = useState('');
-  const [showQuickNote, setShowQuickNote] = useState(false);
-  const [showMoodSelector, setShowMoodSelector] = useState(false);
-  const [mainJournalEntry, setMainJournalEntry] = useState('');
-  const [showMainJournal, setShowMainJournal] = useState(false);
-  const [showStepsCaloriesForm, setShowStepsCaloriesForm] = useState(false);
+  const [showTrackingForm, setShowTrackingForm] = useState(false);
   const [dailyStepsInput, setDailyStepsInput] = useState('');
-  const [dailyCaloriesInput, setDailyCaloriesInput] = useState('');
-  const [dailyTodos, setDailyTodos] = useState<Array<{id: number, text: string, completed: boolean}>>([]);
+  const [caloriesInInput, setCaloriesInInput] = useState('');
+  const [caloriesOutInput, setCaloriesOutInput] = useState('');
+  const [waterOzInput, setWaterOzInput] = useState('');
+  
+  // Date navigation
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
+  
+  // Todo state
+  const [todos, setTodos] = useState<Todo[]>([]);
   const [newTodoText, setNewTodoText] = useState('');
-  const [showTodoForm, setShowTodoForm] = useState(false);
+  const [newTodoCategory, setNewTodoCategory] = useState<'work' | 'habits'>('work');
+  const [editingTodo, setEditingTodo] = useState<number | null>(null);
+  const [editingText, setEditingText] = useState('');
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
+        // Clear existing data when date changes
+        setTodos([]);
+        setLoading(true);
+        
+        // Clear tracking form inputs when date changes
+        setDailyStepsInput('');
+        setCaloriesInInput('');
+        setCaloriesOutInput('');
+        setWaterOzInput('');
+        setShowTrackingForm(false);
+        
         const headers = {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -62,33 +92,58 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
         const quoteData = await quoteResponse.json();
         setDailyQuote(quoteData.quote);
 
-        const today = new Date().toISOString().split('T')[0];
+        const selectedDate = currentDate.toISOString().split('T')[0];
+        console.log('Fetching data for date:', selectedDate, 'view mode:', viewMode);
 
-        const [journalRes, workoutsRes, mealsRes, goalsRes, remindersRes] = await Promise.all([
+        // Calculate date range for week/month views
+        let goalsEndpoint = `http://localhost:5001/goals/${selectedDate}`;
+        if (viewMode === 'week') {
+          const startOfWeek = new Date(currentDate);
+          startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+          const endOfWeek = new Date(startOfWeek);
+          endOfWeek.setDate(startOfWeek.getDate() + 6);
+          const startDateStr = startOfWeek.toISOString().split('T')[0];
+          const endDateStr = endOfWeek.toISOString().split('T')[0];
+          goalsEndpoint = `http://localhost:5001/goals/range/${startDateStr}/${endDateStr}`;
+        } else if (viewMode === 'month') {
+          const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+          const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+          const startDateStr = startOfMonth.toISOString().split('T')[0];
+          const endDateStr = endOfMonth.toISOString().split('T')[0];
+          goalsEndpoint = `http://localhost:5001/goals/range/${startDateStr}/${endDateStr}`;
+        }
+
+        const [journalRes, workoutsRes, mealsRes, goalsRes, remindersRes, todosRes] = await Promise.all([
           fetch('http://localhost:5001/journal', { headers }),
           fetch('http://localhost:5001/workouts', { headers }),
           fetch('http://localhost:5001/meals', { headers }),
-          fetch(`http://localhost:5001/goals/${today}`, { headers }),
-          fetch('http://localhost:5001/reminders', { headers })
+          fetch(goalsEndpoint, { headers }),
+          fetch('http://localhost:5001/reminders', { headers }),
+          // Only fetch todos for day view
+          viewMode === 'day' ? fetch(`http://localhost:5001/todos/daily?date=${selectedDate}`, { headers }) : Promise.resolve({ json: () => Promise.resolve([]) })
         ]);
 
-        const [journal, workouts, meals, goals, reminders] = await Promise.all([
+        const [journal, workouts, meals, goals, reminders, todosData] = await Promise.all([
           journalRes.json(),
           workoutsRes.json(),
           mealsRes.json(),
           goalsRes.json(),
-          remindersRes.json()
+          remindersRes.json(),
+          todosRes.json()
         ]);
 
-        const todayWorkouts = workouts.filter((w: any) => 
-          new Date(w.target_date).toDateString() === new Date().toDateString()
+        console.log('Received todos for date', selectedDate, ':', todosData);
+        setTodos(todosData);
+
+        const selectedWorkouts = workouts.filter((w: any) => 
+          new Date(w.target_date).toDateString() === currentDate.toDateString()
         ).length;
 
-        const todayMeals = meals.filter((m: any) => 
-          new Date(m.meal_time).toDateString() === new Date().toDateString()
+        const selectedMeals = meals.filter((m: any) => 
+          new Date(m.meal_time).toDateString() === currentDate.toDateString()
         );
 
-        const todayCalories = todayMeals.reduce((sum: number, meal: any) => 
+        const selectedCalories = selectedMeals.reduce((sum: number, meal: any) => 
           sum + (meal.calories || 0), 0
         );
 
@@ -96,32 +151,41 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
           !r.completed && new Date(r.reminder_date) >= new Date()
         ).length;
 
-        setStats({
-          journalEntries: journal.length,
-          todayWorkouts,
-          todayMeals: todayMeals.length,
-          weeklyMoodAverage: 7,
-          upcomingReminders,
-          calorieGoal: goals.calorie_goal || 2000,
-          caloriesConsumed: todayCalories,
-          dailySteps: goals.daily_steps || 0,
-          stepsGoal: goals.steps_goal || 10000
-        });
-        
-        // Load daily todos
-        try {
-          const todosResponse = await fetch('http://localhost:5001/todos/daily', { headers });
-          if (todosResponse.ok) {
-            const todosData = await todosResponse.json();
-            setDailyTodos(todosData);
-          } else {
-            console.log('Todos endpoint not available, using empty array');
-            setDailyTodos([]);
-          }
-        } catch (todoError) {
-          console.log('Todos endpoint not available, using empty array');
-          setDailyTodos([]);
+        // Parse stats based on view mode (aggregated vs daily)
+        let statsData;
+        if (viewMode === 'week' || viewMode === 'month') {
+          // Use aggregated data
+          statsData = {
+            journalEntries: journal.length,
+            todayWorkouts: selectedWorkouts,
+            todayMeals: selectedMeals.length,
+            weeklyMoodAverage: 7,
+            upcomingReminders,
+            caloriesIn: Math.round(goals.avg_calorie_goal || 0),
+            caloriesOut: Math.round(goals.avg_calories_out || 0),
+            dailySteps: Math.round(goals.avg_daily_steps || 0),
+            stepsGoal: 10000, // Keep static goal
+            waterOz: Math.round(goals.avg_water_oz || 0),
+            waterGoal: 64 // Keep static goal
+          };
+        } else {
+          // Use daily data
+          statsData = {
+            journalEntries: journal.length,
+            todayWorkouts: selectedWorkouts,
+            todayMeals: selectedMeals.length,
+            weeklyMoodAverage: 7,
+            upcomingReminders,
+            caloriesIn: goals.calorie_goal || 0,
+            caloriesOut: goals.calories_out || 0,
+            dailySteps: goals.daily_steps || 0,
+            stepsGoal: goals.steps_goal || 10000,
+            waterOz: goals.water_oz || 0,
+            waterGoal: goals.water_goal || 64
+          };
         }
+        
+        setStats(statsData);
 
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -133,16 +197,17 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
     if (token) {
       fetchDashboardData();
     }
-  }, [token]);
+  }, [token, currentDate, viewMode]);
 
   const currentHour = new Date().getHours();
   const timeOfDay = currentHour < 12 ? 'morning' : currentHour < 17 ? 'afternoon' : 'evening';
   const TimeIcon = currentHour < 18 ? Sun : Moon;
-  const calorieProgress = (stats.caloriesConsumed / stats.calorieGoal) * 100;
+  const calorieDeficit = stats.caloriesOut - stats.caloriesIn; // Positive means deficit
   const stepsProgress = (stats.dailySteps / stats.stepsGoal) * 100;
+  const waterProgress = (stats.waterOz / stats.waterGoal) * 100;
 
-  const saveStepsAndCalories = async () => {
-    if (!dailyStepsInput && !dailyCaloriesInput) return;
+  const saveDailyTracking = async () => {
+    if (!dailyStepsInput && !caloriesInInput && !caloriesOutInput && !waterOzInput) return;
     
     try {
       const response = await fetch('http://localhost:5001/daily-tracking', {
@@ -153,8 +218,10 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
         },
         body: JSON.stringify({
           daily_steps: parseInt(dailyStepsInput) || stats.dailySteps,
-          calories_consumed: parseInt(dailyCaloriesInput) || stats.caloriesConsumed,
-          date: new Date().toISOString().split('T')[0]
+          calories_in: parseInt(caloriesInInput) || stats.caloriesIn,
+          calories_out: parseInt(caloriesOutInput) || stats.caloriesOut,
+          water_oz: parseInt(waterOzInput) || stats.waterOz,
+          date: currentDate.toISOString().split('T')[0]
         })
       });
       
@@ -162,19 +229,29 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
         setStats(prev => ({
           ...prev,
           dailySteps: parseInt(dailyStepsInput) || prev.dailySteps,
-          caloriesConsumed: parseInt(dailyCaloriesInput) || prev.caloriesConsumed
+          caloriesIn: parseInt(caloriesInInput) || prev.caloriesIn,
+          caloriesOut: parseInt(caloriesOutInput) || prev.caloriesOut,
+          waterOz: parseInt(waterOzInput) || prev.waterOz
         }));
+        
         setDailyStepsInput('');
-        setDailyCaloriesInput('');
-        setShowStepsCaloriesForm(false);
+        setCaloriesInInput('');
+        setCaloriesOutInput('');
+        setWaterOzInput('');
+        setShowTrackingForm(false);
       }
     } catch (error) {
       console.error('Error saving daily tracking:', error);
     }
   };
 
+  // Todo handlers
   const addTodo = async () => {
-    if (!newTodoText.trim()) return;
+    console.log('addTodo called with:', { newTodoText, newTodoCategory });
+    if (!newTodoText.trim()) {
+      console.log('Empty todo text, returning');
+      return;
+    }
     
     try {
       const response = await fetch('http://localhost:5001/todos', {
@@ -185,49 +262,36 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
         },
         body: JSON.stringify({
           text: newTodoText,
-          date: new Date().toISOString().split('T')[0]
+          category: newTodoCategory,
+          date: currentDate.toISOString().split('T')[0]
         })
       });
       
       if (response.ok) {
         const newTodo = await response.json();
-        setDailyTodos(prev => [...prev, newTodo]);
+        console.log('New todo response:', newTodo);
+        setTodos(prev => [...prev, {
+          id: newTodo.id,
+          text: newTodo.text || newTodoText,
+          category: newTodo.category || newTodoCategory,
+          completed: newTodo.completed || false,
+          date: currentDate.toISOString().split('T')[0],
+          created_at: new Date().toISOString()
+        }]);
         setNewTodoText('');
-        setShowTodoForm(false);
       } else {
         console.error('Failed to add todo:', response.status, response.statusText);
-        // For now, add optimistically to UI even if backend fails
-        const optimisticTodo = {
-          id: Date.now(), // temporary ID
-          text: newTodoText,
-          completed: false
-        };
-        setDailyTodos(prev => [...prev, optimisticTodo]);
-        setNewTodoText('');
-        setShowTodoForm(false);
+        const errorData = await response.text();
+        console.error('Error response:', errorData);
       }
     } catch (error) {
       console.error('Error adding todo:', error);
-      // For now, add optimistically to UI even if backend fails
-      const optimisticTodo = {
-        id: Date.now(), // temporary ID
-        text: newTodoText,
-        completed: false
-      };
-      setDailyTodos(prev => [...prev, optimisticTodo]);
-      setNewTodoText('');
-      setShowTodoForm(false);
     }
   };
 
-  const toggleTodo = async (todoId: number) => {
-    // Optimistically update UI first
-    setDailyTodos(prev => prev.map(todo => 
-      todo.id === todoId ? { ...todo, completed: !todo.completed } : todo
-    ));
-    
+  const toggleTodo = async (id: number) => {
     try {
-      const response = await fetch(`http://localhost:5001/todos/${todoId}/toggle`, {
+      const response = await fetch(`http://localhost:5001/todos/${id}/toggle`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -235,31 +299,42 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
         }
       });
       
-      if (!response.ok) {
-        console.error('Failed to toggle todo on server:', response.status);
-        // Revert the change if server fails
-        setDailyTodos(prev => prev.map(todo => 
-          todo.id === todoId ? { ...todo, completed: !todo.completed } : todo
+      if (response.ok) {
+        setTodos(prev => prev.map(todo => 
+          todo.id === id ? { ...todo, completed: !todo.completed } : todo
         ));
       }
     } catch (error) {
       console.error('Error toggling todo:', error);
-      // Revert the change if request fails
-      setDailyTodos(prev => prev.map(todo => 
-        todo.id === todoId ? { ...todo, completed: !todo.completed } : todo
-      ));
     }
   };
 
-  const deleteTodo = async (todoId: number) => {
-    // Store the todo being deleted for potential rollback
-    const todoToDelete = dailyTodos.find(todo => todo.id === todoId);
-    
-    // Optimistically remove from UI first
-    setDailyTodos(prev => prev.filter(todo => todo.id !== todoId));
-    
+  const updateTodo = async (id: number, text: string, category: 'work' | 'habits') => {
     try {
-      const response = await fetch(`http://localhost:5001/todos/${todoId}`, {
+      const response = await fetch(`http://localhost:5001/todos/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ text, category })
+      });
+      
+      if (response.ok) {
+        setTodos(prev => prev.map(todo => 
+          todo.id === id ? { ...todo, text, category } : todo
+        ));
+        setEditingTodo(null);
+        setEditingText('');
+      }
+    } catch (error) {
+      console.error('Error updating todo:', error);
+    }
+  };
+
+  const deleteTodo = async (id: number) => {
+    try {
+      const response = await fetch(`http://localhost:5001/todos/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -267,97 +342,57 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
         }
       });
       
-      if (!response.ok) {
-        console.error('Failed to delete todo on server:', response.status);
-        // Restore the todo if server fails
-        if (todoToDelete) {
-          setDailyTodos(prev => [...prev, todoToDelete].sort((a, b) => a.id - b.id));
-        }
+      if (response.ok) {
+        setTodos(prev => prev.filter(todo => todo.id !== id));
       }
     } catch (error) {
       console.error('Error deleting todo:', error);
-      // Restore the todo if request fails
-      if (todoToDelete) {
-        setDailyTodos(prev => [...prev, todoToDelete].sort((a, b) => a.id - b.id));
-      }
     }
   };
 
-  const handleQuickNoteSave = async () => {
-    if (!quickNote.trim()) return;
-    
-    try {
-      const response = await fetch('http://localhost:5001/journal', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ content: quickNote })
+  const workTodos = todos.filter(todo => todo.category === 'work');
+  const habitTodos = todos.filter(todo => todo.category === 'habits');
+
+  // Date navigation helpers
+  const navigateDate = (direction: 'prev' | 'next') => {
+    const newDate = new Date(currentDate);
+    if (viewMode === 'day') {
+      newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1));
+    } else if (viewMode === 'week') {
+      newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7));
+    } else if (viewMode === 'month') {
+      newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1));
+    }
+    setCurrentDate(newDate);
+  };
+
+  const goToToday = () => {
+    setCurrentDate(new Date());
+  };
+
+  const formatDateDisplay = () => {
+    if (viewMode === 'day') {
+      return currentDate.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        month: 'long', 
+        day: 'numeric',
+        year: 'numeric'
       });
-      
-      if (response.ok) {
-        setQuickNote('');
-        setShowQuickNote(false);
-        const updatedStats = { ...stats, journalEntries: stats.journalEntries + 1 };
-        setStats(updatedStats);
-      }
-    } catch (error) {
-      console.error('Error saving quick note:', error);
-    }
-  };
-
-  const getMoodBasedQuote = async (mood: string) => {
-    try {
-      const response = await fetch('http://localhost:5001/quote', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ mood })
+    } else if (viewMode === 'week') {
+      const startOfWeek = new Date(currentDate);
+      startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      return `${startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+    } else {
+      return currentDate.toLocaleDateString('en-US', { 
+        month: 'long', 
+        year: 'numeric' 
       });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setDailyQuote(data.quote);
-        setShowMoodSelector(false);
-      }
-    } catch (error) {
-      console.error('Error getting mood quote:', error);
     }
   };
 
-  const moods = [
-    { name: 'Happy', emoji: '😊', color: 'emerald', bgColor: 'bg-emerald-500' },
-    { name: 'Sad', emoji: '😔', color: 'slate', bgColor: 'bg-slate-500' },
-    { name: 'Anxious', emoji: '😰', color: 'amber', bgColor: 'bg-amber-500' },
-    { name: 'Angry', emoji: '😠', color: 'red', bgColor: 'bg-red-500' },
-    { name: 'Calm', emoji: '😌', color: 'blue', bgColor: 'bg-blue-500' }
-  ];
-
-  const handleMainJournalSave = async () => {
-    if (!mainJournalEntry.trim()) return;
-    
-    try {
-      const response = await fetch('http://localhost:5001/journal', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ content: mainJournalEntry })
-      });
-      
-      if (response.ok) {
-        setMainJournalEntry('');
-        setShowMainJournal(false);
-        const updatedStats = { ...stats, journalEntries: stats.journalEntries + 1 };
-        setStats(updatedStats);
-      }
-    } catch (error) {
-      console.error('Error saving main journal entry:', error);
-    }
-  };
+  const isToday = currentDate.toDateString() === new Date().toDateString();
 
   if (loading) {
     return (
@@ -396,470 +431,553 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
                 </div>
               </div>
               <div className="text-left sm:text-right">
-                <p className="text-white/60 text-xs sm:text-sm font-medium mb-1">TODAY</p>
+                <p className="text-white/60 text-xs sm:text-sm font-medium mb-1">
+                  {isToday ? 'TODAY' : viewMode.toUpperCase()}
+                </p>
                 <p className="text-white text-lg sm:text-xl font-semibold">
-                  {new Date().toLocaleDateString('en-US', { 
-                    weekday: 'long', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}
+                  {formatDateDisplay()}
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
-          
-          {/* Journal Section */}
-          <div className="lg:col-span-8 space-y-4 sm:space-y-6">
-            <div className="rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 sm:p-6 hover-lift">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 flex items-center justify-center">
-                    <BookOpen className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-white">Today's Reflection</h2>
-                    <p className="text-white/60 text-sm">Capture your thoughts and insights</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Star className="w-5 h-5 text-amber-400 fill-current" />
-                  <span className="text-white/80 text-sm font-medium">{stats.journalEntries} entries</span>
-                </div>
+        {/* Date Navigation */}
+        <div className="rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 sm:p-6 hover-lift">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-2">
+              <div className="flex bg-white/10 rounded-lg p-1">
+                {(['day', 'week', 'month'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setViewMode(mode)}
+                    className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                      viewMode === mode
+                        ? 'bg-indigo-500 text-white'
+                        : 'text-white/70 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                  </button>
+                ))}
               </div>
-              
-              {!showMainJournal ? (
-                <div 
-                  className="border-2 border-dashed border-white/30 rounded-xl p-8 text-center cursor-pointer hover:border-white/50 hover:bg-white/5 transition-all duration-300"
-                  onClick={() => setShowMainJournal(true)}
-                >
-                  <BookOpen className="w-12 h-12 text-white/40 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-white mb-2">Start writing...</h3>
-                  <p className="text-white/60">What happened today? How did it make you feel? What did you learn?</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-white">Writing your reflection</h3>
-                    <div className="flex gap-2">
-                      <button 
-                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors flex items-center gap-2"
-                        onClick={handleMainJournalSave}
-                      >
-                        <Save className="w-4 h-4" />
-                        Save
-                      </button>
-                      <button 
-                        className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
-                        onClick={() => {
-                          setShowMainJournal(false);
-                          setMainJournalEntry('');
-                        }}
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                  <textarea
-                    value={mainJournalEntry}
-                    onChange={(e) => setMainJournalEntry(e.target.value)}
-                    placeholder="What happened today? How are you feeling? What insights did you gain?"
-                    className="w-full h-32 bg-white/10 border border-white/20 rounded-xl p-4 text-white placeholder-white/50 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    autoFocus
-                  />
-                </div>
-              )}
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-              <div className="rounded-lg sm:rounded-xl bg-gradient-to-r from-blue-500/20 to-blue-600/20 backdrop-blur-xl border border-blue-500/30 p-3 sm:p-4 hover-lift">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                  <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400" />
-                  <div className="text-center sm:text-left">
-                    <p className="text-xl sm:text-2xl font-bold text-white">{stats.journalEntries}</p>
-                    <p className="text-blue-300 text-xs sm:text-sm">Entries</p>
-                  </div>
-                </div>
-              </div>
+            {/* Date Navigation Controls */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigateDate('prev')}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white/70 hover:text-white"
+                title={`Previous ${viewMode}`}
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
               
-              <div className="rounded-lg sm:rounded-xl bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 backdrop-blur-xl border border-emerald-500/30 p-3 sm:p-4 hover-lift">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                  <Dumbbell className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-400" />
-                  <div className="text-center sm:text-left">
-                    <p className="text-xl sm:text-2xl font-bold text-white">{stats.todayWorkouts}</p>
-                    <p className="text-emerald-300 text-xs sm:text-sm">Workouts</p>
-                  </div>
-                </div>
-              </div>
+              <button
+                onClick={goToToday}
+                disabled={isToday}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isToday 
+                    ? 'bg-white/5 text-white/40 cursor-not-allowed' 
+                    : 'bg-indigo-500 hover:bg-indigo-600 text-white'
+                }`}
+              >
+                Today
+              </button>
               
-              <div className="rounded-lg sm:rounded-xl bg-gradient-to-r from-amber-500/20 to-amber-600/20 backdrop-blur-xl border border-amber-500/30 p-3 sm:p-4 hover-lift">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                  <Camera className="w-6 h-6 sm:w-8 sm:h-8 text-amber-400" />
-                  <div className="text-center sm:text-left">
-                    <p className="text-xl sm:text-2xl font-bold text-white">{stats.todayMeals}</p>
-                    <p className="text-amber-300 text-xs sm:text-sm">Meals</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="rounded-lg sm:rounded-xl bg-gradient-to-r from-pink-500/20 to-pink-600/20 backdrop-blur-xl border border-pink-500/30 p-3 sm:p-4 hover-lift">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                  <Heart className="w-6 h-6 sm:w-8 sm:h-8 text-pink-400" />
-                  <div className="text-center sm:text-left">
-                    <p className="text-xl sm:text-2xl font-bold text-white">{stats.upcomingReminders}</p>
-                    <p className="text-pink-300 text-xs sm:text-sm">Reminders</p>
-                  </div>
-                </div>
-              </div>
+              <button
+                onClick={() => navigateDate('next')}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white/70 hover:text-white"
+                title={`Next ${viewMode}`}
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Current Date Display */}
+            <div className="flex items-center gap-2 text-white/60">
+              <Calendar className="w-4 h-4" />
+              <span className="text-sm">
+                {currentDate.toLocaleDateString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric', 
+                  year: 'numeric' 
+                })}
+              </span>
             </div>
           </div>
+        </div>
 
-          {/* Right Sidebar */}
-          <div className="lg:col-span-4 space-y-4 sm:space-y-6">
-            
-            {/* Quick Notes */}
-            <div className="rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 sm:p-6 hover-lift">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
-                    <Edit3 className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-white">Quick Notes</h3>
-                </div>
-                <Zap className="w-5 h-5 text-amber-400" />
+        {/* Enhanced Daily Tracking */}
+        <div className="rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 sm:p-6 hover-lift">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center">
+                <Activity className="w-6 h-6 text-white" />
               </div>
-              
-              {!showQuickNote ? (
-                <div 
-                  className="border border-dashed border-white/30 rounded-lg p-6 text-center cursor-pointer hover:border-white/50 hover:bg-white/5 transition-all"
-                  onClick={() => setShowQuickNote(true)}
-                >
-                  <Plus className="w-8 h-8 text-white/40 mx-auto mb-2" />
-                  <p className="text-white/60 text-sm">Capture a quick thought</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-white/80 text-sm">Jot it down</span>
-                    <div className="flex gap-1">
-                      <button 
-                        className="p-1 hover:bg-white/10 rounded"
-                        onClick={handleQuickNoteSave}
-                      >
-                        <Save className="w-4 h-4 text-emerald-400" />
-                      </button>
-                      <button 
-                        className="p-1 hover:bg-white/10 rounded"
-                        onClick={() => {
-                          setShowQuickNote(false);
-                          setQuickNote('');
-                        }}
-                      >
-                        <X className="w-4 h-4 text-white/60" />
-                      </button>
-                    </div>
-                  </div>
-                  <textarea
-                    value={quickNote}
-                    onChange={(e) => setQuickNote(e.target.value)}
-                    placeholder="What's on your mind?"
-                    className="w-full h-20 bg-white/10 border border-white/20 rounded-lg p-3 text-white placeholder-white/50 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    autoFocus
+              <div>
+                <h2 className="text-xl font-bold text-white">
+                  {viewMode === 'day' ? 'Daily Tracking' : `${viewMode === 'week' ? 'Weekly' : 'Monthly'} Average Tracking`}
+                </h2>
+                <p className="text-white/60 text-sm">
+                  {viewMode === 'day' 
+                    ? 'Track your daily activities and progress' 
+                    : `Showing average values for this ${viewMode}`
+                  }
+                </p>
+              </div>
+            </div>
+            {viewMode === 'day' && (
+              <button
+                onClick={() => setShowTrackingForm(!showTrackingForm)}
+                className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition-colors"
+              >
+                <Edit3 className="w-4 h-4" />
+                Update
+              </button>
+            )}
+          </div>
+
+          {showTrackingForm ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                <div>
+                  <label className="block text-white/80 text-xs mb-1">Steps</label>
+                  <input
+                    type="number"
+                    value={dailyStepsInput}
+                    onChange={(e) => setDailyStepsInput(e.target.value)}
+                    placeholder={stats.dailySteps.toString()}
+                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
-              )}
-            </div>
-
-            {/* Daily Wisdom */}
-            <div className="max-w-7xl mx-auto">
-              <div className="rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 sm:p-6 hover-lift">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-white">Daily Wisdom</h3>
+                <div>
+                  <label className="block text-white/80 text-xs mb-1">Calories In</label>
+                  <input
+                    type="number"
+                    value={caloriesInInput}
+                    onChange={(e) => setCaloriesInInput(e.target.value)}
+                    placeholder={stats.caloriesIn.toString()}
+                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
                 </div>
-                <button 
-                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                  onClick={() => setShowMoodSelector(!showMoodSelector)}
+                <div>
+                  <label className="block text-white/80 text-xs mb-1">Calories Out</label>
+                  <input
+                    type="number"
+                    value={caloriesOutInput}
+                    onChange={(e) => setCaloriesOutInput(e.target.value)}
+                    placeholder={stats.caloriesOut.toString()}
+                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-white/80 text-xs mb-1">Water (oz)</label>
+                  <input
+                    type="number"
+                    value={waterOzInput}
+                    onChange={(e) => setWaterOzInput(e.target.value)}
+                    placeholder={stats.waterOz.toString()}
+                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={saveDailyTracking}
+                  className="flex-1 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
-                  <Brain className="w-5 h-5 text-white/60" />
+                  <Save className="w-4 h-4" />
+                  Save Tracking
+                </button>
+                <button
+                  onClick={() => {
+                    setShowTrackingForm(false);
+                    setDailyStepsInput('');
+                    setCaloriesInInput('');
+                    setCaloriesOutInput('');
+                    setWaterOzInput('');
+                  }}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+                >
+                  Cancel
                 </button>
               </div>
-              
-              {showMoodSelector ? (
-                <div className="space-y-4">
-                  <p className="text-white/80 text-sm font-medium">How are you feeling?</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {moods.map(mood => (
-                      <button
-                        key={mood.name}
-                        className={`p-3 rounded-xl border-2 border-transparent hover:border-white/30 transition-all flex flex-col items-center gap-2 ${mood.bgColor}/20 hover:${mood.bgColor}/30`}
-                        onClick={() => getMoodBasedQuote(mood.name.toLowerCase())}
-                      >
-                        <span className="text-2xl">{mood.emoji}</span>
-                        <span className="text-white text-xs font-medium">{mood.name}</span>
-                      </button>
-                    ))}
-                  </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {/* Steps */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Footprints className="w-4 h-4 text-blue-400" />
+                  <span className="text-white/80 text-sm font-medium">Steps</span>
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  <blockquote className="text-white/90 italic leading-relaxed">
-                    "{dailyQuote || 'Loading wisdom...'}"
-                  </blockquote>
-                  <cite className="text-white/60 text-sm">— Ancient Stoic Wisdom</cite>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-2xl font-bold text-white">{stats.dailySteps.toLocaleString()}</span>
+                  <span className="text-white/60 text-sm">/ {stats.stepsGoal.toLocaleString()}</span>
                 </div>
-              )}
+                <div className="w-full bg-white/10 rounded-full h-2">
+                  <div 
+                    className="h-2 rounded-full transition-all duration-500 bg-gradient-to-r from-blue-500 to-blue-600"
+                    style={{ width: `${Math.min(stepsProgress, 100)}%` }}
+                  ></div>
+                </div>
+                <span className={`text-xs font-semibold ${stepsProgress >= 100 ? 'text-emerald-400' : 'text-blue-400'}`}>
+                  {Math.round(stepsProgress)}%
+                </span>
+              </div>
+
+              {/* Calories In */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Flame className="w-4 h-4 text-emerald-400" />
+                  <span className="text-white/80 text-sm font-medium">Calories In</span>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-2xl font-bold text-white">{stats.caloriesIn.toLocaleString()}</span>
+                  <span className="text-white/60 text-sm">consumed</span>
+                </div>
+              </div>
+
+              {/* Calories Out */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-orange-400" />
+                  <span className="text-white/80 text-sm font-medium">Calories Out</span>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-2xl font-bold text-white">{stats.caloriesOut.toLocaleString()}</span>
+                  <span className="text-white/60 text-sm">burned</span>
+                </div>
+              </div>
+
+              {/* Water */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Droplets className="w-4 h-4 text-cyan-400" />
+                  <span className="text-white/80 text-sm font-medium">Water</span>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-2xl font-bold text-white">{stats.waterOz}</span>
+                  <span className="text-white/60 text-sm">/ {stats.waterGoal} oz</span>
+                </div>
+                <div className="w-full bg-white/10 rounded-full h-2">
+                  <div 
+                    className="h-2 rounded-full transition-all duration-500 bg-gradient-to-r from-cyan-500 to-cyan-600"
+                    style={{ width: `${Math.min(waterProgress, 100)}%` }}
+                  ></div>
+                </div>
+                <span className={`text-xs font-semibold ${waterProgress >= 100 ? 'text-emerald-400' : 'text-cyan-400'}`}>
+                  {Math.round(waterProgress)}%
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Daily Todo Lists - Only show in day view */}
+        {viewMode === 'day' ? (
+          <div className="rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 sm:p-6 hover-lift">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-blue-500 flex items-center justify-center">
+                  <CheckSquare className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Today's Todos</h2>
+                  <p className="text-white/60 text-sm">Plan your day with Work and Habits</p>
+                </div>
               </div>
             </div>
 
-            {/* Daily Tracking & Todos Row */}
-            <div className="max-w-7xl mx-auto">
-              <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8">
-              {/* Daily Tracking Card */}
-              <div className="rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 sm:p-6 hover-lift">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center">
-                      <Activity className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-white">Daily Tracking</h3>
-                      <p className="text-white/60 text-sm">Steps & calories</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setShowStepsCaloriesForm(!showStepsCaloriesForm)}
-                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                  >
-                    <Edit3 className="w-4 h-4 text-white/60" />
-                  </button>
+          {/* Add New Todo */}
+          <div className="mb-6 flex flex-col sm:flex-row gap-3">
+            <select
+              value={newTodoCategory}
+              onChange={(e) => setNewTodoCategory(e.target.value as 'work' | 'habits')}
+              className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 sm:w-32"
+              style={{ colorScheme: 'dark' }}
+            >
+              <option value="work" style={{ backgroundColor: '#1f2937', color: 'white' }}>Work</option>
+              <option value="habits" style={{ backgroundColor: '#1f2937', color: 'white' }}>Habits</option>
+            </select>
+            <input
+              type="text"
+              value={newTodoText}
+              onChange={(e) => setNewTodoText(e.target.value)}
+              placeholder="Add a new todo..."
+              className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              onKeyPress={(e) => e.key === 'Enter' && addTodo()}
+            />
+            <button
+              onClick={addTodo}
+              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors flex items-center gap-2 text-sm"
+            >
+              <Plus className="w-4 h-4" />
+              Add
+            </button>
+          </div>
+
+          {/* Two Column Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Work Column */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center">
+                  <Target className="w-4 h-4 text-white" />
                 </div>
-                
-                {showStepsCaloriesForm ? (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-white/80 text-xs mb-1">Steps</label>
-                        <input
-                          type="number"
-                          value={dailyStepsInput}
-                          onChange={(e) => setDailyStepsInput(e.target.value)}
-                          placeholder={stats.dailySteps.toString()}
-                          className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-white/80 text-xs mb-1">Calories</label>
-                        <input
-                          type="number"
-                          value={dailyCaloriesInput}
-                          onChange={(e) => setDailyCaloriesInput(e.target.value)}
-                          placeholder={stats.caloriesConsumed.toString()}
-                          className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={saveStepsAndCalories}
-                        className="flex-1 px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition-colors text-sm flex items-center justify-center gap-1"
-                      >
-                        <Save className="w-3 h-3" />
-                        Save
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowStepsCaloriesForm(false);
-                          setDailyStepsInput('');
-                          setDailyCaloriesInput('');
-                        }}
-                        className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors text-sm"
-                      >
-                        Cancel
-                      </button>
-                    </div>
+                <h3 className="text-lg font-semibold text-white">Work</h3>
+                <span className="text-white/60 text-sm">({workTodos.length})</span>
+              </div>
+              
+              <div className="space-y-2">
+                {workTodos.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Target className="w-12 h-12 text-white/20 mx-auto mb-3" />
+                    <p className="text-white/40 text-sm">No work todos yet</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {/* Steps Progress */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <div className="flex items-center gap-1">
-                          <Footprints className="w-4 h-4 text-blue-400" />
-                          <span className="text-white/80">{stats.dailySteps.toLocaleString()} / {stats.stepsGoal.toLocaleString()}</span>
-                        </div>
-                        <span className={`font-semibold ${stepsProgress >= 100 ? 'text-emerald-400' : 'text-blue-400'}`}>
-                          {Math.round(stepsProgress)}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-white/10 rounded-full h-2">
-                        <div 
-                          className="h-2 rounded-full transition-all duration-500 bg-gradient-to-r from-blue-500 to-blue-600"
-                          style={{ width: `${Math.min(stepsProgress, 100)}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                    
-                    {/* Calories Progress */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <div className="flex items-center gap-1">
-                          <Flame className="w-4 h-4 text-orange-400" />
-                          <span className="text-white/80">{stats.caloriesConsumed} / {stats.calorieGoal} cal</span>
-                        </div>
-                        <span className={`font-semibold ${calorieProgress > 100 ? 'text-red-400' : 'text-emerald-400'}`}>
-                          {Math.round(calorieProgress)}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-white/10 rounded-full h-2">
-                        <div 
-                          className={`h-2 rounded-full transition-all duration-500 ${
-                            calorieProgress > 100 
-                              ? 'bg-gradient-to-r from-red-500 to-red-600' 
-                              : 'bg-gradient-to-r from-emerald-500 to-emerald-600'
-                          }`}
-                          style={{ width: `${Math.min(calorieProgress, 100)}%` }}
-                        ></div>
-                      </div>
-                      {calorieProgress > 100 && (
-                        <p className="text-red-400 text-xs">⚠️ Goal exceeded</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              {/* Daily Todos Card */}
-              <div className="rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 sm:p-6 hover-lift">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
-                      <CheckSquare className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-white">Today's Todos</h3>
-                      <p className="text-white/60 text-sm">{dailyTodos.filter(t => t.completed).length}/{dailyTodos.length} completed</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setShowTodoForm(!showTodoForm)}
-                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                  >
-                    <Plus className="w-4 h-4 text-white/60" />
-                  </button>
-                </div>
-                
-                {showTodoForm && (
-                  <div className="mb-4 space-y-3">
-                    <input
-                      type="text"
-                      value={newTodoText}
-                      onChange={(e) => setNewTodoText(e.target.value)}
-                      placeholder="Add a new todo..."
-                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                      onKeyPress={(e) => e.key === 'Enter' && addTodo()}
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={addTodo}
-                        className="flex-1 px-3 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-colors text-sm flex items-center justify-center gap-1"
-                      >
-                        <Plus className="w-3 h-3" />
-                        Add
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowTodoForm(false);
-                          setNewTodoText('');
-                        }}
-                        className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors text-sm"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
-                
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {dailyTodos.length === 0 ? (
-                    <div className="text-center py-4">
-                      <CheckSquare className="w-8 h-8 text-white/40 mx-auto mb-2" />
-                      <p className="text-white/60 text-sm">No todos yet. Add one to get started!</p>
-                    </div>
-                  ) : (
-                    dailyTodos.map(todo => (
-                      <div key={todo.id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg transition-colors group">
+                  workTodos.map((todo) => (
+                    <div
+                      key={todo.id}
+                      className={`p-3 rounded-lg border transition-all duration-200 ${
+                        todo.completed 
+                          ? 'bg-emerald-500/10 border-emerald-500/30' 
+                          : 'bg-white/5 border-white/10 hover:bg-white/10'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
                         <button
                           onClick={() => toggleTodo(todo.id)}
-                          className="flex-shrink-0"
+                          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                            todo.completed
+                              ? 'bg-emerald-500 border-emerald-500'
+                              : 'border-white/30 hover:border-blue-400'
+                          }`}
                         >
                           {todo.completed ? (
-                            <CheckSquare className="w-4 h-4 text-emerald-400" />
+                            <CheckSquare className="w-3 h-3 text-white" />
                           ) : (
-                            <Square className="w-4 h-4 text-white/60 hover:text-white" />
+                            <Square className="w-3 h-3 text-white/60" />
                           )}
                         </button>
-                        <span className={`flex-1 text-sm ${todo.completed ? 'text-white/60 line-through' : 'text-white'}`}>
-                          {todo.text}
-                        </span>
-                        <button
-                          onClick={() => deleteTodo(todo.id)}
-                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500/20 rounded transition-all"
-                        >
-                          <Trash2 className="w-3 h-3 text-red-400" />
-                        </button>
+                        
+                        {editingTodo === todo.id ? (
+                          <div className="flex-1 flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={editingText}
+                              onChange={(e) => setEditingText(e.target.value)}
+                              className="flex-1 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  updateTodo(todo.id, editingText, 'work');
+                                }
+                              }}
+                              autoFocus
+                            />
+                            <button
+                              onClick={() => updateTodo(todo.id, editingText, 'work')}
+                              className="p-1 text-emerald-400 hover:text-emerald-300"
+                            >
+                              <Save className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingTodo(null);
+                                setEditingText('');
+                              }}
+                              className="p-1 text-white/60 hover:text-white/80"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex-1 flex items-center justify-between">
+                            <span className={`text-sm ${
+                              todo.completed 
+                                ? 'text-white/60 line-through' 
+                                : 'text-white'
+                            }`}>
+                              {todo.text}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => {
+                                  setEditingTodo(todo.id);
+                                  setEditingText(todo.text);
+                                }}
+                                className="p-1 text-white/40 hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <Edit3 className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={() => deleteTodo(todo.id)}
+                                className="p-1 text-white/40 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    ))
-                  )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Habits Column */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center">
+                  <Zap className="w-4 h-4 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-white">Habits</h3>
+                <span className="text-white/60 text-sm">({habitTodos.length})</span>
+              </div>
+              
+              <div className="space-y-2">
+                {habitTodos.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Zap className="w-12 h-12 text-white/20 mx-auto mb-3" />
+                    <p className="text-white/40 text-sm">No habit todos yet</p>
+                  </div>
+                ) : (
+                  habitTodos.map((todo) => (
+                    <div
+                      key={todo.id}
+                      className={`p-3 rounded-lg border transition-all duration-200 group ${
+                        todo.completed 
+                          ? 'bg-emerald-500/10 border-emerald-500/30' 
+                          : 'bg-white/5 border-white/10 hover:bg-white/10'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => toggleTodo(todo.id)}
+                          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                            todo.completed
+                              ? 'bg-emerald-500 border-emerald-500'
+                              : 'border-white/30 hover:border-emerald-400'
+                          }`}
+                        >
+                          {todo.completed ? (
+                            <CheckSquare className="w-3 h-3 text-white" />
+                          ) : (
+                            <Square className="w-3 h-3 text-white/60" />
+                          )}
+                        </button>
+                        
+                        {editingTodo === todo.id ? (
+                          <div className="flex-1 flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={editingText}
+                              onChange={(e) => setEditingText(e.target.value)}
+                              className="flex-1 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  updateTodo(todo.id, editingText, 'habits');
+                                }
+                              }}
+                              autoFocus
+                            />
+                            <button
+                              onClick={() => updateTodo(todo.id, editingText, 'habits')}
+                              className="p-1 text-emerald-400 hover:text-emerald-300"
+                            >
+                              <Save className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingTodo(null);
+                                setEditingText('');
+                              }}
+                              className="p-1 text-white/60 hover:text-white/80"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex-1 flex items-center justify-between">
+                            <span className={`text-sm ${
+                              todo.completed 
+                                ? 'text-white/60 line-through' 
+                                : 'text-white'
+                            }`}>
+                              {todo.text}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => {
+                                  setEditingTodo(todo.id);
+                                  setEditingText(todo.text);
+                                }}
+                                className="p-1 text-white/40 hover:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <Edit3 className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={() => deleteTodo(todo.id)}
+                                className="p-1 text-white/40 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+        ) : (
+          <div className="rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 sm:p-6 hover-lift">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-blue-500 flex items-center justify-center">
+                  <CheckSquare className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">{viewMode === 'week' ? 'Weekly' : 'Monthly'} Overview</h2>
+                  <p className="text-white/60 text-sm">Todos are only available in day view. Switch to day view to manage your todos.</p>
                 </div>
               </div>
             </div>
+            
+            <div className="text-center py-12">
+              <Calendar className="w-16 h-16 text-white/20 mx-auto mb-4" />
+              <p className="text-white/40 text-lg mb-2">
+                {viewMode === 'week' ? 'Weekly View' : 'Monthly View'}
+              </p>
+              <p className="text-white/60 text-sm">
+                The daily tracker above shows {viewMode === 'week' ? 'average' : 'average'} values for this {viewMode}.
+                <br />Switch to day view to manage individual todos.
+              </p>
             </div>
           </div>
+        )}
+
+
+        {/* Daily Wisdom */}
+        <div className="rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 sm:p-6 hover-lift">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <h3 className="text-lg font-semibold text-white">Daily Wisdom</h3>
+          </div>
+          <blockquote className="text-white/90 italic leading-relaxed">
+            "{dailyQuote || 'Loading wisdom...'}"
+          </blockquote>
+          <cite className="text-white/60 text-sm">— Ancient Stoic Wisdom</cite>
         </div>
 
-        {/* Quick Actions */}
-        <div className="rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 sm:p-6">
-          <div className="flex items-center gap-3 mb-4 sm:mb-6">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
-              <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div>
-              <h2 className="text-lg sm:text-xl font-bold text-white">Quick Actions</h2>
-              <p className="text-white/60 text-xs sm:text-sm">Jump into your favorite activities</p>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-            {[
-              { icon: BookOpen, label: 'Journal', page: 'journal', color: 'from-blue-500 to-blue-600' },
-              { icon: Dumbbell, label: 'Workout', page: 'workouts', color: 'from-emerald-500 to-emerald-600' },
-              { icon: Camera, label: 'Meals', page: 'meals', color: 'from-amber-500 to-amber-600' },
-              { icon: Target, label: 'Goals', page: 'goals', color: 'from-cyan-500 to-blue-600' },
-              { icon: Plus, label: 'Ideas', page: 'ideas', color: 'from-purple-500 to-purple-600' },
-              { icon: Smile, label: 'Mood', page: 'mood', color: 'from-pink-500 to-pink-600' },
-            ].map((action) => (
-              <button
-                key={action.label}
-                className="group relative overflow-hidden rounded-lg sm:rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 p-3 sm:p-4 transition-all duration-300 hover:scale-105 active:scale-95"
-                onClick={() => onPageChange?.(action.page)}
-              >
-                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-md sm:rounded-lg bg-gradient-to-r ${action.color} flex items-center justify-center mx-auto mb-2 sm:mb-3`}>
-                  <action.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </div>
-                <p className="text-white font-medium text-xs sm:text-sm">{action.label}</p>
-                <div className="absolute inset-0 bg-gradient-to-r from-white/0 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );

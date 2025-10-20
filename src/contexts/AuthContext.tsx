@@ -25,34 +25,18 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-
-  useEffect(() => {
-    const savedToken = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
-    
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
-    }
-  }, []);
+  const [user] = useState<User | null>({ id: 1, username: 'guest', email: 'guest@example.com' });
+  const [token] = useState<string | null>('dev-mode-token');
 
   const login = (newToken: string, userData: User) => {
-    localStorage.setItem('token', newToken);
-    localStorage.setItem('user', JSON.stringify(userData));
-    setToken(newToken);
-    setUser(userData);
+    // Authentication disabled - do nothing
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setToken(null);
-    setUser(null);
+    // Authentication disabled - do nothing
   };
 
-  const isAuthenticated = !!token && !!user;
+  const isAuthenticated = true; // Always authenticated
 
   return (
     <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated }}>

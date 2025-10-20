@@ -82,6 +82,9 @@ const initializeDatabase = async () => {
       energy_level INTEGER,
       notes TEXT,
       stoic_quote TEXT,
+      entry_type VARCHAR(20) DEFAULT 'general',
+      entry_date DATE DEFAULT CURRENT_DATE,
+      one_word_feeling VARCHAR(100),
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users (id)
     )`);
@@ -177,15 +180,42 @@ const initializeDatabase = async () => {
       user_id INTEGER NOT NULL,
       goal_date DATE NOT NULL,
       calorie_goal INTEGER,
-      water_goal INTEGER DEFAULT 8,
+      water_goal INTEGER DEFAULT 64,
+      water_oz INTEGER DEFAULT 0,
       exercise_goal TEXT,
       daily_steps INTEGER DEFAULT 0,
       steps_goal INTEGER DEFAULT 10000,
+      books_read INTEGER DEFAULT 0,
+      book_notes INTEGER DEFAULT 0,
+      ideas INTEGER DEFAULT 0,
+      bible_lectures INTEGER DEFAULT 0,
+      recovery_score INTEGER DEFAULT 0,
+      strain_score DECIMAL(3,1) DEFAULT 0,
+      sleep_hours DECIMAL(3,1) DEFAULT 0,
+      sleep_efficiency INTEGER DEFAULT 0,
+      hrv_score INTEGER DEFAULT 0,
+      resting_hr INTEGER DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users (id),
       UNIQUE(user_id, goal_date)
     )`);
+
+    // Add WHOOP-style columns if they don't exist
+    await pool.query(`ALTER TABLE daily_goals ADD COLUMN IF NOT EXISTS recovery_score INTEGER DEFAULT 0`);
+    await pool.query(`ALTER TABLE daily_goals ADD COLUMN IF NOT EXISTS strain_score DECIMAL(3,1) DEFAULT 0`);
+    await pool.query(`ALTER TABLE daily_goals ADD COLUMN IF NOT EXISTS sleep_hours DECIMAL(3,1) DEFAULT 0`);
+    await pool.query(`ALTER TABLE daily_goals ADD COLUMN IF NOT EXISTS sleep_efficiency INTEGER DEFAULT 0`);
+    await pool.query(`ALTER TABLE daily_goals ADD COLUMN IF NOT EXISTS hrv_score INTEGER DEFAULT 0`);
+    await pool.query(`ALTER TABLE daily_goals ADD COLUMN IF NOT EXISTS resting_hr INTEGER DEFAULT 0`);
+    
+    // Add calories_out column for tracking calories burned
+    await pool.query(`ALTER TABLE daily_goals ADD COLUMN IF NOT EXISTS calories_out INTEGER DEFAULT 0`);
+    
+    // Add new columns to mood_entries if they don't exist
+    await pool.query(`ALTER TABLE mood_entries ADD COLUMN IF NOT EXISTS entry_type VARCHAR(20) DEFAULT 'general'`);
+    await pool.query(`ALTER TABLE mood_entries ADD COLUMN IF NOT EXISTS entry_date DATE DEFAULT CURRENT_DATE`);
+    await pool.query(`ALTER TABLE mood_entries ADD COLUMN IF NOT EXISTS one_word_feeling VARCHAR(100)`);
 
     // Daily todos table
     await pool.query(`CREATE TABLE IF NOT EXISTS daily_todos (
@@ -194,8 +224,39 @@ const initializeDatabase = async () => {
       text TEXT NOT NULL,
       completed BOOLEAN DEFAULT FALSE,
       date DATE NOT NULL,
+      category VARCHAR(50) DEFAULT 'work',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users (id)
+    )`);
+
+    // Add category column if it doesn't exist
+    await pool.query(`ALTER TABLE daily_todos ADD COLUMN IF NOT EXISTS category VARCHAR(50) DEFAULT 'work'`);
+
+    // Books table
+    await pool.query(`CREATE TABLE IF NOT EXISTS books (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      title VARCHAR(255) NOT NULL,
+      author VARCHAR(255) NOT NULL,
+      genre VARCHAR(100),
+      description TEXT,
+      cover_image VARCHAR(255),
+      status VARCHAR(50) DEFAULT 'want-to-read' CHECK (status IN ('want-to-read', 'reading', 'completed')),
+      rating INTEGER CHECK (rating >= 0 AND rating <= 5),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users (id)
+    )`);
+
+    // Book notes table
+    await pool.query(`CREATE TABLE IF NOT EXISTS book_notes (
+      id SERIAL PRIMARY KEY,
+      book_id INTEGER NOT NULL,
+      content TEXT NOT NULL,
+      image_path VARCHAR(255),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (book_id) REFERENCES books (id) ON DELETE CASCADE
     )`);
 
     console.log('✅ Database tables initialized successfully');

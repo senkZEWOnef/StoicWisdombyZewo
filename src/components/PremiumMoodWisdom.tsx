@@ -14,6 +14,7 @@ interface MoodEntry {
   stoic_quote: string;
   entry_type: 'morning' | 'evening';
   entry_date: string;
+  one_word_feeling: string;
   created_at: string;
 }
 
@@ -36,7 +37,7 @@ const PremiumMoodWisdom: React.FC = () => {
   const [selectedMood, setSelectedMood] = useState('');
   const [energyLevel, setEnergyLevel] = useState(5);
   const [moodNotes, setMoodNotes] = useState('');
-  // const [generatedQuote, setGeneratedQuote] = useState('');
+  const [oneWordFeeling, setOneWordFeeling] = useState('');
 
   const moods = [
     { 
@@ -154,11 +155,11 @@ const PremiumMoodWisdom: React.FC = () => {
   useEffect(() => {
     fetchDailyQuote();
     fetchMoodEntries();
-  }, []);
+  }, [selectedDate]);
 
   const fetchDailyQuote = async () => {
     try {
-      const response = await fetch('http://localhost:5001/daily');
+      const response = await fetch(`http://localhost:5001/daily?date=${selectedDate}`);
       const data = await response.json();
       setDailyQuote(data.quote);
     } catch (error) {
@@ -169,7 +170,7 @@ const PremiumMoodWisdom: React.FC = () => {
 
   const fetchMoodEntries = async () => {
     try {
-      const response = await fetch('http://localhost:5001/mood-entries', {
+      const response = await fetch(`http://localhost:5001/mood-entries?date=${selectedDate}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -195,7 +196,7 @@ const PremiumMoodWisdom: React.FC = () => {
   };
 
   const saveMoodEntry = async () => {
-    if (!selectedMood || !activeEntry) return;
+    if (!selectedMood || !activeEntry || !oneWordFeeling.trim()) return;
     
     setSaving(true);
     try {
@@ -213,6 +214,7 @@ const PremiumMoodWisdom: React.FC = () => {
           notes: moodNotes,
           entry_type: activeEntry,
           entry_date: selectedDate,
+          one_word_feeling: oneWordFeeling,
           stoic_quote: quote
         })
       });
@@ -221,6 +223,7 @@ const PremiumMoodWisdom: React.FC = () => {
         setSelectedMood('');
         setEnergyLevel(5);
         setMoodNotes('');
+        setOneWordFeeling('');
         setActiveEntry(null);
         fetchMoodEntries();
       }
@@ -251,7 +254,11 @@ const PremiumMoodWisdom: React.FC = () => {
   };
 
   const getEntriesForDate = (date: string): DayEntries => {
-    const dayEntries = moodEntries.filter(entry => entry.entry_date === date);
+    const dayEntries = moodEntries.filter(entry => {
+      // Handle both date strings and full ISO dates
+      const entryDate = entry.entry_date ? entry.entry_date.split('T')[0] : entry.created_at.split('T')[0];
+      return entryDate === date;
+    });
     return {
       date,
       morning: dayEntries.find(entry => entry.entry_type === 'morning'),
@@ -390,6 +397,13 @@ const PremiumMoodWisdom: React.FC = () => {
                   </div>
                 </div>
                 
+                {todayEntries.morning.one_word_feeling && (
+                  <p className="text-white/80 mb-2">
+                    <span className="text-white/60">One word: </span>
+                    <span className="font-medium text-amber-300">"{todayEntries.morning.one_word_feeling}"</span>
+                  </p>
+                )}
+                
                 {todayEntries.morning.notes && (
                   <p className="text-white/80 italic">"{todayEntries.morning.notes}"</p>
                 )}
@@ -456,6 +470,13 @@ const PremiumMoodWisdom: React.FC = () => {
                     <p className="text-white/60 text-sm">Energy: {todayEntries.evening.energy_level}/10</p>
                   </div>
                 </div>
+                
+                {todayEntries.evening.one_word_feeling && (
+                  <p className="text-white/80 mb-2">
+                    <span className="text-white/60">One word: </span>
+                    <span className="font-medium text-indigo-300">"{todayEntries.evening.one_word_feeling}"</span>
+                  </p>
+                )}
                 
                 {todayEntries.evening.notes && (
                   <p className="text-white/80 italic">"{todayEntries.evening.notes}"</p>
@@ -560,6 +581,18 @@ const PremiumMoodWisdom: React.FC = () => {
                 </div>
               </div>
 
+              {/* One Word Feeling */}
+              <div>
+                <label className="block text-white font-medium mb-2">One word to describe how you're feeling? *</label>
+                <input
+                  type="text"
+                  value={oneWordFeeling}
+                  onChange={(e) => setOneWordFeeling(e.target.value)}
+                  placeholder="e.g., grateful, exhausted, hopeful, overwhelmed..."
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
               {/* Notes */}
               <div>
                 <label className="block text-white font-medium mb-2">What's on your mind? (optional)</label>
@@ -575,7 +608,7 @@ const PremiumMoodWisdom: React.FC = () => {
               {/* Save Button */}
               <button
                 onClick={saveMoodEntry}
-                disabled={saving || !selectedMood}
+                disabled={saving || !selectedMood || !oneWordFeeling.trim()}
                 className="w-full px-6 py-4 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-2xl transition-all duration-200 flex items-center justify-center gap-3"
               >
                 {saving ? (
@@ -594,61 +627,6 @@ const PremiumMoodWisdom: React.FC = () => {
           </div>
         )}
 
-        {/* Recent Week */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-              <TrendingUp className="w-6 h-6 text-purple-400" />
-              This Week's Journey
-            </h2>
-          </div>
-          
-          <div className="grid gap-4">
-            {recentDays.map((day) => (
-              <div key={day.date} className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-6 hover-lift">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold text-white">{formatDate(day.date)}</h3>
-                  <div className="flex items-center gap-2">
-                    {day.morning && <Sunrise className="w-5 h-5 text-amber-400" />}
-                    {day.evening && <Moon className="w-5 h-5 text-indigo-400" />}
-                  </div>
-                </div>
-                
-                <div className="grid md:grid-cols-2 gap-4">
-                  {day.morning ? (
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{getMoodData(day.morning.mood).emoji}</span>
-                      <div>
-                        <p className="text-white font-medium">Morning: {day.morning.mood}</p>
-                        <p className="text-white/60 text-sm">Energy: {day.morning.energy_level}/10</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-3 opacity-50">
-                      <Sunrise className="w-8 h-8 text-white/20" />
-                      <p className="text-white/40">No morning entry</p>
-                    </div>
-                  )}
-                  
-                  {day.evening ? (
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{getMoodData(day.evening.mood).emoji}</span>
-                      <div>
-                        <p className="text-white font-medium">Evening: {day.evening.mood}</p>
-                        <p className="text-white/60 text-sm">Energy: {day.evening.energy_level}/10</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-3 opacity-50">
-                      <Moon className="w-8 h-8 text-white/20" />
-                      <p className="text-white/40">No evening entry</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );

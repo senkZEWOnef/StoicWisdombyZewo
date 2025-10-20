@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import PremiumLogin from './components/PremiumLogin';
+import { AuthProvider } from './contexts/AuthContext';
 import PremiumLayout from './components/PremiumLayout';
 import PremiumDashboard from './components/PremiumDashboard';
 import PremiumJournal from './components/PremiumJournal';
@@ -11,14 +10,10 @@ import PremiumMoodWisdom from './components/PremiumMoodWisdom';
 import PremiumCalendar from './components/PremiumCalendar';
 import PremiumDataExport from './components/PremiumDataExport';
 import PremiumGoals from './components/PremiumGoals';
+import PremiumBooks from './components/PremiumBooks';
 
 const AppContent: React.FC = () => {
-  const { isAuthenticated } = useAuth();
   const [currentPage, setCurrentPage] = useState('dashboard');
-
-  if (!isAuthenticated) {
-    return <PremiumLogin />;
-  }
 
   const renderPage = () => {
     switch (currentPage) {
@@ -38,6 +33,8 @@ const AppContent: React.FC = () => {
         return <PremiumMeals />;
       case 'goals':
         return <PremiumGoals />;
+      case 'books':
+        return <PremiumBooks />;
       case 'export':
         return <PremiumDataExport />;
       default:

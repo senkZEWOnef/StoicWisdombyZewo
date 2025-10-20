@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Lightbulb, Plus, Edit, Tag, Search, Filter, Sparkles, Brain, Zap, Star } from 'lucide-react';
+import { Lightbulb, Plus, Edit, Tag, Search, Filter, Sparkles, Brain, Zap, Star, Trash2 } from 'lucide-react';
 
 interface Idea {
   id: number;
@@ -41,6 +41,7 @@ const PremiumIdeas: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState<number | null>(null);
 
   const categories = [
     { id: 'general', name: 'General', color: 'from-slate-500 to-slate-600', emoji: '📝' },
@@ -146,6 +147,68 @@ const PremiumIdeas: React.FC = () => {
       console.error('Error saving note:', error);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const deleteIdea = async (ideaId: number) => {
+    console.log('Delete idea called with ID:', ideaId);
+    if (!window.confirm('Are you sure you want to delete this idea?')) return;
+    
+    setDeleting(ideaId);
+    try {
+      console.log('Sending DELETE request to:', `http://localhost:5001/ideas/${ideaId}`);
+      const response = await fetch(`http://localhost:5001/ideas/${ideaId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('Delete response status:', response.status);
+      if (response.ok) {
+        console.log('Idea deleted successfully, refreshing data...');
+        fetchData();
+      } else {
+        console.error('Delete failed with status:', response.status);
+        const errorData = await response.text();
+        console.error('Error response:', errorData);
+      }
+    } catch (error) {
+      console.error('Error deleting idea:', error);
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  const deleteNote = async (noteId: number) => {
+    console.log('Delete note called with ID:', noteId);
+    if (!window.confirm('Are you sure you want to delete this note?')) return;
+    
+    setDeleting(noteId);
+    try {
+      console.log('Sending DELETE request to:', `http://localhost:5001/notes/${noteId}`);
+      const response = await fetch(`http://localhost:5001/notes/${noteId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('Delete response status:', response.status);
+      if (response.ok) {
+        console.log('Note deleted successfully, refreshing data...');
+        fetchData();
+      } else {
+        console.error('Delete failed with status:', response.status);
+        const errorData = await response.text();
+        console.error('Error response:', errorData);
+      }
+    } catch (error) {
+      console.error('Error deleting note:', error);
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -385,6 +448,17 @@ const PremiumIdeas: React.FC = () => {
                           <button className="text-white/60 hover:text-white transition-colors">
                             <Edit className="w-4 h-4" />
                           </button>
+                          <button 
+                            onClick={() => deleteIdea(idea.id)}
+                            disabled={deleting === idea.id}
+                            className="text-white/60 hover:text-red-400 transition-colors disabled:opacity-50"
+                          >
+                            {deleting === idea.id ? (
+                              <div className="w-4 h-4 border-2 border-white/30 border-t-red-400 rounded-full animate-spin"></div>
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
+                          </button>
                         </div>
                       </div>
                     );
@@ -525,6 +599,17 @@ const PremiumIdeas: React.FC = () => {
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button className="text-white/60 hover:text-white transition-colors">
                             <Edit className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={() => deleteNote(note.id)}
+                            disabled={deleting === note.id}
+                            className="text-white/60 hover:text-red-400 transition-colors disabled:opacity-50"
+                          >
+                            {deleting === note.id ? (
+                              <div className="w-4 h-4 border-2 border-white/30 border-t-red-400 rounded-full animate-spin"></div>
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
                           </button>
                         </div>
                       </div>

@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { 
   Home, BookOpen, Lightbulb, Calendar, Heart, 
   Dumbbell, Camera, LogOut, Menu, X, Settings, User, 
-  ChevronRight, Download, Sparkles, Target, ChevronLeft
+  ChevronRight, Download, Sparkles, Target, ChevronLeft, Book
 } from 'lucide-react';
 
 interface PremiumLayoutProps {
@@ -21,6 +21,7 @@ const PremiumLayout: React.FC<PremiumLayoutProps> = ({ children, currentPage, on
     { id: 'dashboard', label: 'Dashboard', icon: Home, gradient: 'from-blue-500 to-purple-600' },
     { id: 'journal', label: 'Journal', icon: BookOpen, gradient: 'from-emerald-500 to-teal-600' },
     { id: 'ideas', label: 'Ideas & Notes', icon: Lightbulb, gradient: 'from-amber-500 to-orange-600' },
+    { id: 'books', label: 'Books', icon: Book, gradient: 'from-rose-500 to-pink-600' },
     { id: 'goals', label: 'Goals', icon: Target, gradient: 'from-cyan-500 to-blue-600' },
     { id: 'calendar', label: 'Schedule', icon: Calendar, gradient: 'from-indigo-500 to-purple-600' },
     { id: 'mood', label: 'Mood & Wisdom', icon: Heart, gradient: 'from-red-500 to-rose-600' },
