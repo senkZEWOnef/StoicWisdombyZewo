@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node index.js",
     "build": "npm run build:frontend",
-    "build:frontend": "cd .. && npm ci && npm run build && cp -r dist server/",
+    "build:frontend": "cd .. && npm ci --include=dev && npm run build && cp -r dist server/",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
