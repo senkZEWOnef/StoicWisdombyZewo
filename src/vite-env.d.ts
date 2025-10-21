@@ -26,3 +26,13 @@ declare module 'react-dom/client' {
   export function createRoot(container: Element | DocumentFragment): Root;
   export function hydrateRoot(container: Element | DocumentFragment, initialChildren: React.ReactNode): Root;
 }
+
+// Vite config modules
+declare module 'vite' {
+  export function defineConfig(config: any): any;
+  export * from 'vite';
+}
+
+declare module '@vitejs/plugin-react' {
+  export default function react(options?: any): any;
+}
