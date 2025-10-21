@@ -12,6 +12,7 @@ import PremiumCalendar from './components/PremiumCalendar';
 import PremiumDataExport from './components/PremiumDataExport';
 import PremiumGoals from './components/PremiumGoals';
 import PremiumBooks from './components/PremiumBooks';
+import PremiumBodyMetrics from './components/PremiumBodyMetrics';
 
 const AppContent: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -42,6 +43,8 @@ const AppContent: React.FC = () => {
         return <PremiumGoals />;
       case 'books':
         return <PremiumBooks />;
+      case 'bodymetrics':
+        return <PremiumBodyMetrics />;
       case 'export':
         return <PremiumDataExport />;
       default:

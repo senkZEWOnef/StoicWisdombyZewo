@@ -310,6 +310,24 @@ const initializeDatabase = async () => {
       FOREIGN KEY (workout_session_id) REFERENCES workout_sessions (id) ON DELETE CASCADE
     )`);
 
+    // Body metrics table
+    await pool.query(`CREATE TABLE IF NOT EXISTS body_metrics (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      metric_date DATE NOT NULL,
+      weight DECIMAL(5,2),
+      body_fat_percentage DECIMAL(4,2),
+      muscle_mass DECIMAL(5,2),
+      water_percentage DECIMAL(4,2),
+      bone_mass DECIMAL(4,2),
+      visceral_fat DECIMAL(4,2),
+      bmr INTEGER,
+      notes TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users (id)
+    )`);
+
     console.log('✅ Database tables initialized successfully');
   } catch (error) {
     console.error('❌ Error initializing database:', error);

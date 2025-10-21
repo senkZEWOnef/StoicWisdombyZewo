@@ -1136,6 +1136,145 @@ app.get("/community-photos/:fdcId", async (req, res) => {
   }
 });
 
+// Body Metrics
+app.get("/body-metrics", authMiddleware, async (req, res) => {
+  try {
+    const result = await db.query(
+      "SELECT * FROM body_metrics WHERE user_id = $1 ORDER BY metric_date DESC, created_at DESC",
+      [req.userId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Body metrics fetch error:', err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.post("/body-metrics", authMiddleware, async (req, res) => {
+  const { 
+    metric_date, 
+    weight, 
+    body_fat_percentage, 
+    muscle_mass, 
+    water_percentage, 
+    bone_mass, 
+    visceral_fat, 
+    bmr, 
+    notes 
+  } = req.body;
+  
+  try {
+    const result = await db.query(
+      `INSERT INTO body_metrics (
+        user_id, metric_date, weight, body_fat_percentage, muscle_mass, 
+        water_percentage, bone_mass, visceral_fat, bmr, notes
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
+      [
+        req.userId, 
+        metric_date, 
+        weight, 
+        body_fat_percentage, 
+        muscle_mass, 
+        water_percentage, 
+        bone_mass, 
+        visceral_fat, 
+        bmr, 
+        notes
+      ]
+    );
+    
+    res.json({ 
+      id: result.rows[0].id, 
+      message: "Body metrics saved successfully" 
+    });
+  } catch (err) {
+    console.error('Body metrics creation error:', err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.put("/body-metrics/:id", authMiddleware, async (req, res) => {
+  const { 
+    metric_date, 
+    weight, 
+    body_fat_percentage, 
+    muscle_mass, 
+    water_percentage, 
+    bone_mass, 
+    visceral_fat, 
+    bmr, 
+    notes 
+  } = req.body;
+  
+  try {
+    const result = await db.query(
+      `UPDATE body_metrics SET 
+        metric_date = $1, weight = $2, body_fat_percentage = $3, muscle_mass = $4,
+        water_percentage = $5, bone_mass = $6, visceral_fat = $7, bmr = $8, notes = $9,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $10 AND user_id = $11`,
+      [
+        metric_date, weight, body_fat_percentage, muscle_mass,
+        water_percentage, bone_mass, visceral_fat, bmr, notes,
+        req.params.id, req.userId
+      ]
+    );
+    
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Body metric entry not found" });
+    }
+    
+    res.json({ message: "Body metrics updated successfully" });
+  } catch (err) {
+    console.error('Body metrics update error:', err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.delete("/body-metrics/:id", authMiddleware, async (req, res) => {
+  try {
+    const result = await db.query(
+      "DELETE FROM body_metrics WHERE id = $1 AND user_id = $2",
+      [req.params.id, req.userId]
+    );
+    
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Body metric entry not found" });
+    }
+    
+    res.json({ message: "Body metric entry deleted successfully" });
+  } catch (err) {
+    console.error('Body metrics deletion error:', err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Get body metrics statistics for a date range
+app.get("/body-metrics/stats/:startDate/:endDate", authMiddleware, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.params;
+    
+    const result = await db.query(
+      `SELECT 
+        COUNT(*) as total_entries,
+        AVG(weight) as avg_weight,
+        MIN(weight) as min_weight,
+        MAX(weight) as max_weight,
+        AVG(body_fat_percentage) as avg_body_fat,
+        AVG(muscle_mass) as avg_muscle_mass,
+        AVG(bmr) as avg_bmr
+      FROM body_metrics 
+      WHERE user_id = $1 AND metric_date >= $2 AND metric_date <= $3`,
+      [req.userId, startDate, endDate]
+    );
+    
+    res.json(result.rows[0] || {});
+  } catch (err) {
+    console.error('Body metrics stats error:', err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`✅ Personal Development Journal API running at http://localhost:${PORT}`);
 });

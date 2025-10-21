@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { 
   Home, BookOpen, Lightbulb, Calendar, Heart, 
   Dumbbell, Camera, LogOut, Menu, X, Settings, User, 
-  ChevronRight, Download, Sparkles, Target, ChevronLeft, Book
+  ChevronRight, Download, Sparkles, Target, ChevronLeft, Book, Scale
 } from 'lucide-react';
 
 interface PremiumLayoutProps {
@@ -28,6 +28,7 @@ const PremiumLayout: React.FC<PremiumLayoutProps> = ({ children, currentPage, on
     { id: 'mood', label: 'Mood & Wisdom', icon: Heart, gradient: 'from-red-500 to-rose-600' },
     { id: 'workouts', label: 'Workouts', icon: Dumbbell, gradient: 'from-green-500 to-emerald-600' },
     { id: 'meals', label: 'Meals', icon: Camera, gradient: 'from-yellow-500 to-amber-600' },
+    { id: 'bodymetrics', label: 'Body Metrics', icon: Scale, gradient: 'from-teal-500 to-cyan-600' },
     { id: 'export', label: 'Export Data', icon: Download, gradient: 'from-violet-500 to-purple-600' },
   ];
 
