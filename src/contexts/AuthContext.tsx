@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { setAuthCallback } from '../utils/api';
 
 interface User {
   id: number;
@@ -12,6 +13,7 @@ interface AuthContextType {
   login: (token: string, userData: User) => void;
   logout: () => void;
   isAuthenticated: boolean;
+  forceLogout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,6 +30,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
+  // Helper function to check if JWT token is expired
+  const isTokenExpired = (token: string): boolean => {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const currentTime = Date.now() / 1000;
+      return payload.exp < currentTime;
+    } catch (error) {
+      return true; // If we can't parse the token, consider it expired
+    }
+  };
+
   // Load user data from localStorage on component mount
   useEffect(() => {
     const savedToken = localStorage.getItem('authToken');
@@ -35,6 +48,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     if (savedToken && savedUser) {
       try {
+        // Check if token is expired
+        if (isTokenExpired(savedToken)) {
+          console.log('Stored token is expired, clearing auth data');
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('authUser');
+          return;
+        }
+
         const userData = JSON.parse(savedUser);
         setToken(savedToken);
         setUser(userData);
@@ -60,10 +81,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('authUser');
   };
 
+  // Force logout function that can be called from API errors
+  const forceLogout = () => {
+    console.log('Force logout due to authentication error');
+    logout();
+  };
+
+  // Register the forceLogout callback with the API utility
+  useEffect(() => {
+    setAuthCallback(forceLogout);
+  }, []);
+
   const isAuthenticated = !!token && !!user;
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated, forceLogout }}>
       {children}
     </AuthContext.Provider>
   );
