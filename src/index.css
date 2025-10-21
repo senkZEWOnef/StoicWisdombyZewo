@@ -411,3 +411,61 @@ blockquote {
     transform: scale(0.95);
   }
 }
+
+/* Additional mobile optimizations */
+@media (max-width: 640px) {
+  /* Ensure modals are properly sized on small screens */
+  .modal-dialog {
+    margin: 0.5rem;
+    max-width: calc(100vw - 1rem);
+  }
+  
+  /* Stack grids more aggressively on mobile */
+  .grid-mobile-stack {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+  
+  /* Improve readability with larger text on mobile */
+  .text-mobile-lg {
+    font-size: 1.125rem;
+    line-height: 1.75;
+  }
+  
+  /* Better spacing for mobile cards */
+  .mobile-card-compact {
+    padding: 1rem !important;
+    border-radius: 0.75rem !important;
+  }
+  
+  /* Optimize navigation for mobile */
+  .mobile-nav-compact {
+    padding: 0.5rem !important;
+    font-size: 0.875rem;
+  }
+}
+
+/* Very small mobile devices (iPhone SE, etc.) */
+@media (max-width: 375px) {
+  /* Further reduce padding and margins */
+  .container-fluid {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  /* Make text inputs more mobile-friendly */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  textarea {
+    padding: 0.75rem;
+    font-size: 16px;
+  }
+  
+  /* Adjust button sizes for very small screens */
+  .btn-sm-mobile {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+}

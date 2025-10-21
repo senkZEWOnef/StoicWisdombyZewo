@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import PremiumLayout from './components/PremiumLayout';
+import PremiumLogin from './components/PremiumLogin';
 import PremiumDashboard from './components/PremiumDashboard';
 import PremiumJournal from './components/PremiumJournal';
 import PremiumIdeas from './components/PremiumIdeas';
@@ -13,7 +14,13 @@ import PremiumGoals from './components/PremiumGoals';
 import PremiumBooks from './components/PremiumBooks';
 
 const AppContent: React.FC = () => {
+  const { isAuthenticated } = useAuth();
   const [currentPage, setCurrentPage] = useState('dashboard');
+
+  // Show login page if not authenticated
+  if (!isAuthenticated) {
+    return <PremiumLogin />;
+  }
 
   const renderPage = () => {
     switch (currentPage) {

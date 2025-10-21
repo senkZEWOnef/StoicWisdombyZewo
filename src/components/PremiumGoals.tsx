@@ -308,7 +308,7 @@ const PremiumGoals: React.FC = () => {
         </div>
 
         {/* Goal Type Summary */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4">
           {goalTypes.map((type) => {
             const Icon = type.icon;
             const stats = summary[type.value];
@@ -389,7 +389,7 @@ const PremiumGoals: React.FC = () => {
             </div>
 
             <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="md:col-span-2">
                   <label className="block text-white font-medium mb-2">Goal Title *</label>
                   <input

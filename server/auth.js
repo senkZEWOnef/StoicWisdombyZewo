@@ -5,11 +5,6 @@ const db = require('./database');
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 const authMiddleware = (req, res, next) => {
-  // Development mode - always allow requests
-  console.log('Development mode: bypassing authentication');
-  req.userId = 1; // Use default user ID
-  return next();
-  
   const token = req.header('Authorization')?.replace('Bearer ', '');
   
   if (!token) {

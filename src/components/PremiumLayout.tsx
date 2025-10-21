@@ -16,6 +16,7 @@ const PremiumLayout: React.FC<PremiumLayoutProps> = ({ children, currentPage, on
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, gradient: 'from-blue-500 to-purple-600' },
@@ -70,7 +71,7 @@ const PremiumLayout: React.FC<PremiumLayoutProps> = ({ children, currentPage, on
                 </div>
                 {!sidebarCollapsed && (
                   <div>
-                    <h1 className="text-xl font-bold text-white">Stoic Wisdom</h1>
+                    <h1 className="text-xl font-bold text-white">Eudaimon</h1>
                     <p className="text-white/60 text-sm">Personal Growth Hub</p>
                   </div>
                 )}
@@ -180,12 +181,14 @@ const PremiumLayout: React.FC<PremiumLayoutProps> = ({ children, currentPage, on
           {/* Footer */}
           <div className={`border-t border-white/10 ${sidebarCollapsed ? 'lg:p-3' : 'p-6'}`}>
             <div className="space-y-3">
-              <button className={`
-                w-full flex items-center rounded-xl transition-colors group relative
-                ${sidebarCollapsed ? 'justify-center p-2' : 'gap-3 p-3'} 
-                hover:bg-white/5
-              `}
-              title={sidebarCollapsed ? "Settings" : undefined}
+              <button 
+                className={`
+                  w-full flex items-center rounded-xl transition-colors group relative
+                  ${sidebarCollapsed ? 'justify-center p-2' : 'gap-3 p-3'} 
+                  hover:bg-white/5
+                `}
+                title={sidebarCollapsed ? "Settings" : undefined}
+                onClick={() => setShowSettings(true)}
               >
                 <Settings className="w-5 h-5 text-white/60" />
                 {!sidebarCollapsed && <span className="text-white/80">Settings</span>}
@@ -250,6 +253,103 @@ const PremiumLayout: React.FC<PremiumLayoutProps> = ({ children, currentPage, on
           {children}
         </div>
       </div>
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl border border-white/20 rounded-2xl p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center">
+                  <Settings className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-xl font-bold text-white">Settings</h2>
+              </div>
+              <button
+                onClick={() => setShowSettings(false)}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-white/60" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Account Section */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold text-white border-b border-white/10 pb-2">Account</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-white/80">Username</span>
+                    <span className="text-white font-medium">{user?.username}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-white/80">Email</span>
+                    <span className="text-white font-medium">{user?.email}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Preferences Section */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold text-white border-b border-white/10 pb-2">Preferences</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-white/80">Dark Mode</span>
+                    <div className="w-12 h-6 bg-purple-500 rounded-full relative">
+                      <div className="w-5 h-5 bg-white rounded-full absolute top-0.5 right-0.5"></div>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-white/80">Notifications</span>
+                    <div className="w-12 h-6 bg-white/20 rounded-full relative">
+                      <div className="w-5 h-5 bg-white rounded-full absolute top-0.5 left-0.5"></div>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-white/80">Sidebar Collapsed</span>
+                    <div className={`w-12 h-6 rounded-full relative transition-colors ${sidebarCollapsed ? 'bg-purple-500' : 'bg-white/20'}`}>
+                      <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${sidebarCollapsed ? 'right-0.5' : 'left-0.5'}`}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* App Info */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold text-white border-b border-white/10 pb-2">About</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-white/80">Version</span>
+                    <span className="text-white font-medium">1.0.0</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-white/80">Database</span>
+                    <span className="text-emerald-400 font-medium">Connected</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowSettings(false)}
+                className="flex-1 py-2 px-4 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  setSidebarCollapsed(!sidebarCollapsed);
+                }}
+                className="flex-1 py-2 px-4 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white rounded-lg transition-colors"
+              >
+                Toggle Sidebar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

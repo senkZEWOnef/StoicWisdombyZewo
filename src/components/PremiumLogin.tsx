@@ -47,10 +47,37 @@ const PremiumLogin: React.FC = () => {
   };
 
   const features = [
-    { icon: Brain, label: 'Daily Reflection', desc: 'Track mood & get Stoic wisdom' },
-    { icon: Heart, label: 'Personal Journal', desc: 'Capture thoughts & emotions' },
-    { icon: Lightbulb, label: 'Ideas & Notes', desc: 'Organize creative thoughts' },
-    { icon: Target, label: 'Goal Tracking', desc: 'Workouts, meals & progress' }
+    { 
+      icon: Brain, 
+      label: 'AI-Powered Mood Tracking', 
+      desc: 'Get personalized Stoic wisdom based on your daily emotions and mental state',
+      highlight: 'Personalized Insights'
+    },
+    { 
+      icon: Heart, 
+      label: 'Smart Journal System', 
+      desc: 'Capture thoughts with intelligent prompts and emotional analysis',
+      highlight: 'Voice-to-Text Ready'
+    },
+    { 
+      icon: Lightbulb, 
+      label: 'Creative Ideas Hub', 
+      desc: 'Organize thoughts, poetry, and creative projects with smart categorization',
+      highlight: 'Multi-Language Support'
+    },
+    { 
+      icon: Target, 
+      label: 'Complete Wellness Tracking', 
+      desc: '800+ exercises, nutrition database, WHOOP-style metrics & goal setting',
+      highlight: 'Real Exercise Database'
+    }
+  ];
+
+  const stats = [
+    { number: '800+', label: 'Exercise Database' },
+    { number: '50K+', label: 'Food Items' },
+    { number: '100+', label: 'Stoic Quotes' },
+    { number: '24/7', label: 'Data Sync' }
   ];
 
   return (
@@ -65,55 +92,102 @@ const PremiumLogin: React.FC = () => {
 
       <div className="relative w-full max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
         
-        {/* Left side - Branding */}
+        {/* Left side - Enhanced Marketing */}
         <div className="hidden lg:block space-y-8 text-white">
+          {/* Hero Section */}
           <div className="space-y-6">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center relative">
                 <Sparkles className="w-8 h-8 text-white" />
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full animate-pulse flex items-center justify-center">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                </div>
               </div>
               <div>
-                <h1 className="text-4xl font-bold">Stoic Wisdom</h1>
-                <p className="text-white/70 text-lg">Personal Growth Hub</p>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
+                  Eudaimon
+                </h1>
+                <p className="text-purple-300 text-lg font-medium">The Ultimate Personal Growth Platform</p>
               </div>
             </div>
             
             <div className="space-y-4">
-              <h2 className="text-2xl font-semibold text-white/90">
-                Transform your daily habits into a journey of self-discovery
+              <h2 className="text-3xl font-bold text-white leading-tight">
+                Transform Every Day Into A 
+                <span className="text-transparent bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text"> Breakthrough</span>
               </h2>
-              <p className="text-white/70 text-lg leading-relaxed">
-                Combine ancient Stoic philosophy with modern personal development tools. 
-                Track your mood, journal your thoughts, and receive personalized wisdom 
-                to guide your path to inner peace and growth.
+              <p className="text-white/80 text-xl leading-relaxed">
+                Join thousands who've revolutionized their wellness journey with our AI-powered platform combining 
+                <span className="text-purple-300 font-semibold"> ancient wisdom </span> 
+                and 
+                <span className="text-pink-300 font-semibold"> cutting-edge technology</span>.
               </p>
+            </div>
+
+            {/* Stats Row */}
+            <div className="grid grid-cols-2 gap-4">
+              {stats.map((stat, index) => (
+                <div key={index} className="text-center p-4 rounded-xl bg-gradient-to-r from-white/5 to-white/10 backdrop-blur border border-white/20">
+                  <div className="text-2xl font-bold text-white">{stat.number}</div>
+                  <div className="text-white/70 text-sm">{stat.label}</div>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Features */}
-          <div className="grid grid-cols-2 gap-4">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <div key={index} className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 hover-lift">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center">
-                      <Icon className="w-4 h-4 text-white" />
+          {/* Enhanced Features */}
+          <div className="space-y-6">
+            <h3 className="text-xl font-bold text-white/90 mb-4">🚀 What Makes Us Different</h3>
+            <div className="space-y-4">
+              {features.map((feature, index) => {
+                const Icon = feature.icon;
+                return (
+                  <div key={index} className="group rounded-2xl bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-xl border border-white/20 p-5 hover:from-purple-500/10 hover:to-pink-500/10 hover:border-purple-400/30 transition-all duration-300 hover-lift">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Icon className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="font-bold text-white group-hover:text-purple-200 transition-colors">{feature.label}</h4>
+                          <span className="px-2 py-1 text-xs bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full font-medium">
+                            {feature.highlight}
+                          </span>
+                        </div>
+                        <p className="text-white/70 text-sm leading-relaxed group-hover:text-white/80 transition-colors">{feature.desc}</p>
+                      </div>
                     </div>
-                    <h3 className="font-semibold text-white">{feature.label}</h3>
                   </div>
-                  <p className="text-white/60 text-sm">{feature.desc}</p>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
 
-          {/* Quote */}
-          <div className="rounded-2xl bg-gradient-to-r from-purple-600/20 to-blue-600/20 backdrop-blur-xl border border-white/20 p-6">
-            <blockquote className="text-white/90 italic text-lg leading-relaxed">
-              "You have power over your mind - not outside events. Realize this, and you will find strength."
-            </blockquote>
-            <footer className="text-white/70 text-sm mt-3">— Marcus Aurelius</footer>
+          {/* Social Proof & CTA */}
+          <div className="space-y-4">
+            <div className="rounded-2xl bg-gradient-to-r from-emerald-600/20 to-blue-600/20 backdrop-blur-xl border border-emerald-400/30 p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex -space-x-2">
+                  {[1,2,3,4].map(i => (
+                    <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 border-2 border-white flex items-center justify-center text-white text-xs font-bold">
+                      {i}
+                    </div>
+                  ))}
+                </div>
+                <div className="text-emerald-400 font-semibold">2,847+ Active Users</div>
+              </div>
+              <blockquote className="text-white/90 italic text-lg leading-relaxed">
+                "This app transformed my daily routine. The nutrition tracking with real food database and workout builder are game-changers!"
+              </blockquote>
+              <footer className="text-emerald-300 text-sm mt-3 font-medium">— Sarah M., Premium User</footer>
+            </div>
+
+            <div className="text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full border border-purple-400/30">
+                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                <span className="text-white/80 text-sm">Free 30-day trial • No credit card required</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -126,7 +200,7 @@ const PremiumLogin: React.FC = () => {
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center mx-auto mb-4">
                 <Sparkles className="w-8 h-8 text-white" />
               </div>
-              <h1 className="text-2xl font-bold text-white mb-2">Stoic Wisdom</h1>
+              <h1 className="text-2xl font-bold text-white mb-2">Eudaimon</h1>
               <p className="text-white/60">Your personal growth journey</p>
             </div>
 

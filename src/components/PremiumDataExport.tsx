@@ -191,7 +191,7 @@ const PremiumDataExport: React.FC = () => {
   };
 
   const convertToCSV = (data: any) => {
-    let csv = `# Stoic Wisdom Data Export\n# Generated: ${data.exportDate}\n# User: ${data.user}\n\n`;
+    let csv = `# Eudaimon Data Export\n# Generated: ${data.exportDate}\n# User: ${data.user}\n\n`;
     
     Object.keys(data).forEach(section => {
       if (['exportDate', 'user', 'format', 'version'].includes(section)) return;

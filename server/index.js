@@ -11,7 +11,7 @@ const db = require("./database");
 const { authMiddleware, register, login } = require("./auth");
 
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:4173'],
+  origin: ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:4173', 'http://localhost:5175'],
   credentials: true
 }));
 app.use(express.json());
@@ -924,6 +924,193 @@ app.post("/daily-tracking", authMiddleware, async (req, res) => {
     res.json({ message: "Daily tracking updated" });
   } catch (err) {
     console.error('Daily tracking error:', err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Workout Sessions
+app.get("/workout-sessions", authMiddleware, async (req, res) => {
+  try {
+    const date = req.query.date;
+    let query, params;
+    
+    if (date) {
+      query = "SELECT * FROM workout_sessions WHERE user_id = $1 AND workout_date = $2 ORDER BY created_at DESC";
+      params = [req.userId, date];
+    } else {
+      query = "SELECT * FROM workout_sessions WHERE user_id = $1 ORDER BY created_at DESC";
+      params = [req.userId];
+    }
+    
+    const result = await db.query(query, params);
+    
+    // Get exercises for each workout session
+    const sessionPromises = result.rows.map(async session => {
+      try {
+        const exercisesResult = await db.query(
+          "SELECT * FROM workout_session_exercises WHERE workout_session_id = $1 ORDER BY id",
+          [session.id]
+        );
+        return {
+          ...session,
+          exercises: exercisesResult.rows
+        };
+      } catch (err) {
+        return {
+          ...session,
+          exercises: []
+        };
+      }
+    });
+    
+    const sessionsWithExercises = await Promise.all(sessionPromises);
+    res.json(sessionsWithExercises);
+  } catch (err) {
+    console.error('Workout sessions fetch error:', err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.post("/workout-sessions", authMiddleware, async (req, res) => {
+  const { session_name, workout_date, total_duration, total_calories, notes, exercises } = req.body;
+  
+  try {
+    const sessionResult = await db.query(
+      "INSERT INTO workout_sessions (user_id, session_name, workout_date, total_duration, total_calories, notes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
+      [req.userId, session_name, workout_date, total_duration, total_calories, notes || '']
+    );
+    
+    const sessionId = sessionResult.rows[0].id;
+    
+    // Insert exercises if provided
+    if (exercises && exercises.length > 0) {
+      try {
+        const exercisePromises = exercises.map((exercise) => {
+          return db.query(
+            "INSERT INTO workout_session_exercises (workout_session_id, exercise_name, exercise_category, primary_muscles, equipment, sets, reps, weight, duration, distance, rest_time, calories_burned, notes, exercise_data) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)",
+            [
+              sessionId,
+              exercise.exercise_name,
+              exercise.exercise_category,
+              JSON.stringify(exercise.primary_muscles),
+              exercise.equipment,
+              exercise.sets,
+              exercise.reps,
+              exercise.weight,
+              exercise.duration,
+              exercise.distance,
+              exercise.rest_time,
+              exercise.calories_burned,
+              exercise.notes,
+              JSON.stringify(exercise.exercise_data)
+            ]
+          );
+        });
+        
+        await Promise.all(exercisePromises);
+        res.json({ id: sessionId, message: "Workout session created with exercises" });
+      } catch (exerciseError) {
+        console.error('Exercise insertion error:', exerciseError);
+        res.status(500).json({ error: "Error adding exercises to workout session" });
+      }
+    } else {
+      res.json({ id: sessionId, message: "Workout session created" });
+    }
+  } catch (err) {
+    console.error('Workout session creation error:', err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.delete("/workout-sessions/:id", authMiddleware, async (req, res) => {
+  try {
+    const result = await db.query(
+      "DELETE FROM workout_sessions WHERE id = $1 AND user_id = $2",
+      [req.params.id, req.userId]
+    );
+    
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Workout session not found" });
+    }
+    
+    res.json({ message: "Workout session deleted" });
+  } catch (err) {
+    console.error('Workout session deletion error:', err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Get daily workout statistics
+app.get("/workout-stats/:date", authMiddleware, async (req, res) => {
+  try {
+    const { date } = req.params;
+    
+    const result = await db.query(
+      `SELECT 
+        COUNT(*) as session_count,
+        COALESCE(SUM(total_calories), 0) as total_calories_burned,
+        COALESCE(SUM(total_duration), 0) as total_duration,
+        COALESCE(AVG(total_calories), 0) as avg_calories_per_session
+      FROM workout_sessions 
+      WHERE user_id = $1 AND workout_date = $2`,
+      [req.userId, date]
+    );
+    
+    const stats = result.rows[0];
+    
+    // Convert string values to numbers
+    const workoutStats = {
+      session_count: parseInt(stats.session_count) || 0,
+      total_calories_burned: parseInt(stats.total_calories_burned) || 0,
+      total_duration: parseInt(stats.total_duration) || 0,
+      avg_calories_per_session: Math.round(parseFloat(stats.avg_calories_per_session)) || 0
+    };
+    
+    res.json(workoutStats);
+  } catch (err) {
+    console.error('Workout stats error:', err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Community Photos for USDA foods
+app.post("/community-photos", authMiddleware, upload.single('image'), async (req, res) => {
+  const { fdcId } = req.body;
+  const image_path = req.file ? req.file.filename : null;
+  
+  if (!image_path || !fdcId) {
+    return res.status(400).json({ error: "Image and USDA food ID are required" });
+  }
+  
+  try {
+    const result = await db.query(
+      "INSERT INTO community_photos (user_id, fdc_id, image_path) VALUES ($1, $2, $3) RETURNING id",
+      [req.userId, fdcId, image_path]
+    );
+    
+    const imageUrl = `http://localhost:${PORT}/uploads/${image_path}`;
+    res.json({ 
+      id: result.rows[0].id, 
+      imageUrl,
+      message: "Community photo uploaded successfully" 
+    });
+  } catch (err) {
+    console.error('Community photo upload error:', err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.get("/community-photos/:fdcId", async (req, res) => {
+  try {
+    const result = await db.query(
+      "SELECT image_path, created_at FROM community_photos WHERE fdc_id = $1 ORDER BY created_at DESC",
+      [req.params.fdcId]
+    );
+    
+    const images = result.rows.map(row => `http://localhost:${PORT}/uploads/${row.image_path}`);
+    res.json({ images });
+  } catch (err) {
+    console.error('Community photos fetch error:', err);
     res.status(500).json({ error: "Server error" });
   }
 });

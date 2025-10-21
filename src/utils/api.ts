@@ -1,10 +1,16 @@
 const API_BASE_URL = 'http://localhost:5001';
 
 export const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
-  const defaultHeaders = {
+  const token = localStorage.getItem('authToken');
+  
+  const defaultHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
-    'X-Dev-Mode': 'true', // Bypass authentication
   };
+
+  // Add authorization header if token exists
+  if (token) {
+    defaultHeaders['Authorization'] = `Bearer ${token}`;
+  }
 
   const config: RequestInit = {
     ...options,

@@ -1,3 +1,4 @@
+require('dotenv').config();
 const { Pool } = require('pg');
 
 const pool = new Pool({
@@ -257,6 +258,56 @@ const initializeDatabase = async () => {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (book_id) REFERENCES books (id) ON DELETE CASCADE
+    )`);
+
+    // Community photos table for USDA foods
+    await pool.query(`CREATE TABLE IF NOT EXISTS community_photos (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      fdc_id INTEGER NOT NULL,
+      image_path VARCHAR(255) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users (id)
+    )`);
+
+    // Add index for faster lookups
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_community_photos_fdc_id ON community_photos (fdc_id)`);
+
+    // Workout sessions table
+    await pool.query(`CREATE TABLE IF NOT EXISTS workout_sessions (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      session_name VARCHAR(255) NOT NULL,
+      workout_date DATE NOT NULL,
+      total_duration INTEGER DEFAULT 0,
+      total_calories INTEGER DEFAULT 0,
+      notes TEXT,
+      completed BOOLEAN DEFAULT FALSE,
+      completed_at TIMESTAMP,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users (id)
+    )`);
+
+    // Workout session exercises table
+    await pool.query(`CREATE TABLE IF NOT EXISTS workout_session_exercises (
+      id SERIAL PRIMARY KEY,
+      workout_session_id INTEGER NOT NULL,
+      exercise_name VARCHAR(255) NOT NULL,
+      exercise_category VARCHAR(100),
+      primary_muscles JSONB,
+      equipment VARCHAR(255),
+      sets INTEGER,
+      reps INTEGER,
+      weight DECIMAL,
+      duration INTEGER,
+      distance DECIMAL,
+      rest_time INTEGER,
+      calories_burned INTEGER DEFAULT 0,
+      notes TEXT,
+      exercise_data JSONB,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (workout_session_id) REFERENCES workout_sessions (id) ON DELETE CASCADE
     )`);
 
     console.log('✅ Database tables initialized successfully');

@@ -336,7 +336,7 @@ const PremiumMoodWisdom: React.FC = () => {
             <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
               <Lightbulb className="w-6 h-6 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-white">Today's Stoic Wisdom</h2>
+            <h2 className="text-2xl font-bold text-white">Today's Wisdom</h2>
           </div>
           <blockquote className="text-white/90 text-lg leading-relaxed max-w-4xl mx-auto">
             <p className="mb-4 italic">"{dailyQuote}"</p>
@@ -619,7 +619,7 @@ const PremiumMoodWisdom: React.FC = () => {
                 ) : (
                   <>
                     <Save className="w-5 h-5" />
-                    Save & Get Stoic Wisdom
+                    Save & Get Wisdom
                   </>
                 )}
               </button>

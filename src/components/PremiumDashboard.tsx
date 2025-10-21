@@ -113,32 +113,31 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
           goalsEndpoint = `http://localhost:5001/goals/range/${startDateStr}/${endDateStr}`;
         }
 
-        const [journalRes, workoutsRes, mealsRes, goalsRes, remindersRes, todosRes] = await Promise.all([
+        const [journalRes, workoutsRes, mealsRes, goalsRes, remindersRes, todosRes, workoutStatsRes] = await Promise.all([
           fetch('http://localhost:5001/journal', { headers }),
-          fetch('http://localhost:5001/workouts', { headers }),
+          fetch(`http://localhost:5001/workout-sessions?date=${selectedDate}`, { headers }),
           fetch('http://localhost:5001/meals', { headers }),
           fetch(goalsEndpoint, { headers }),
           fetch('http://localhost:5001/reminders', { headers }),
           // Only fetch todos for day view
-          viewMode === 'day' ? fetch(`http://localhost:5001/todos/daily?date=${selectedDate}`, { headers }) : Promise.resolve({ json: () => Promise.resolve([]) })
+          viewMode === 'day' ? fetch(`http://localhost:5001/todos/daily?date=${selectedDate}`, { headers }) : Promise.resolve({ json: () => Promise.resolve([]) }),
+          fetch(`http://localhost:5001/workout-stats/${selectedDate}`, { headers })
         ]);
 
-        const [journal, workouts, meals, goals, reminders, todosData] = await Promise.all([
+        const [journal, workouts, meals, goals, reminders, todosData, workoutStats] = await Promise.all([
           journalRes.json(),
           workoutsRes.json(),
           mealsRes.json(),
           goalsRes.json(),
           remindersRes.json(),
-          todosRes.json()
+          todosRes.json(),
+          workoutStatsRes.json()
         ]);
 
         console.log('Received todos for date', selectedDate, ':', todosData);
         setTodos(todosData);
 
-        const selectedWorkouts = workouts.filter((w: any) => 
-          new Date(w.target_date).toDateString() === currentDate.toDateString()
-        ).length;
-
+        // Filter meals by selected date
         const selectedMeals = meals.filter((m: any) => 
           new Date(m.meal_time).toDateString() === currentDate.toDateString()
         );
@@ -146,6 +145,10 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
         const selectedCalories = selectedMeals.reduce((sum: number, meal: any) => 
           sum + (meal.calories || 0), 0
         );
+
+        // Use workout stats from new API
+        const selectedWorkouts = workoutStats.session_count || 0;
+        const workoutCaloriesBurned = workoutStats.total_calories_burned || 0;
 
         const upcomingReminders = reminders.filter((r: any) => 
           !r.completed && new Date(r.reminder_date) >= new Date()
@@ -161,8 +164,8 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
             todayMeals: selectedMeals.length,
             weeklyMoodAverage: 7,
             upcomingReminders,
-            caloriesIn: Math.round(goals.avg_calorie_goal || 0),
-            caloriesOut: Math.round(goals.avg_calories_out || 0),
+            caloriesIn: selectedCalories,
+            caloriesOut: workoutCaloriesBurned,
             dailySteps: Math.round(goals.avg_daily_steps || 0),
             stepsGoal: 10000, // Keep static goal
             waterOz: Math.round(goals.avg_water_oz || 0),
@@ -176,8 +179,8 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
             todayMeals: selectedMeals.length,
             weeklyMoodAverage: 7,
             upcomingReminders,
-            caloriesIn: goals.calorie_goal || 0,
-            caloriesOut: goals.calories_out || 0,
+            caloriesIn: selectedCalories,
+            caloriesOut: workoutCaloriesBurned,
             dailySteps: goals.daily_steps || 0,
             stepsGoal: goals.steps_goal || 10000,
             waterOz: goals.water_oz || 0,
@@ -444,15 +447,15 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
 
         {/* Date Navigation */}
         <div className="rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 sm:p-6 hover-lift">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col gap-4">
             {/* View Mode Toggle */}
-            <div className="flex items-center gap-2">
-              <div className="flex bg-white/10 rounded-lg p-1">
+            <div className="flex items-center justify-center sm:justify-start">
+              <div className="flex bg-white/10 rounded-lg p-1 w-full sm:w-auto">
                 {(['day', 'week', 'month'] as const).map((mode) => (
                   <button
                     key={mode}
                     onClick={() => setViewMode(mode)}
-                    className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                    className={`flex-1 sm:flex-none px-3 py-1 rounded-md text-sm font-medium transition-colors ${
                       viewMode === mode
                         ? 'bg-indigo-500 text-white'
                         : 'text-white/70 hover:text-white hover:bg-white/10'
@@ -464,49 +467,74 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
               </div>
             </div>
 
-            {/* Date Navigation Controls */}
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => navigateDate('prev')}
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white/70 hover:text-white"
-                title={`Previous ${viewMode}`}
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              
-              <button
-                onClick={goToToday}
-                disabled={isToday}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isToday 
-                    ? 'bg-white/5 text-white/40 cursor-not-allowed' 
-                    : 'bg-indigo-500 hover:bg-indigo-600 text-white'
-                }`}
-              >
-                Today
-              </button>
-              
-              <button
-                onClick={() => navigateDate('next')}
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white/70 hover:text-white"
-                title={`Next ${viewMode}`}
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
+            {/* Date Navigation Controls and Current Date */}
+            <div className="flex items-center justify-between gap-4">
+              {/* Date Navigation Controls */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => navigateDate('prev')}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white/70 hover:text-white"
+                  title={`Previous ${viewMode}`}
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                
+                <button
+                  onClick={goToToday}
+                  disabled={isToday}
+                  className={`px-3 xs:px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isToday 
+                      ? 'bg-white/5 text-white/40 cursor-not-allowed' 
+                      : 'bg-indigo-500 hover:bg-indigo-600 text-white'
+                  }`}
+                >
+                  Today
+                </button>
+                
+                <button
+                  onClick={() => navigateDate('next')}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white/70 hover:text-white"
+                  title={`Next ${viewMode}`}
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
 
-            {/* Current Date Display */}
-            <div className="flex items-center gap-2 text-white/60">
-              <Calendar className="w-4 h-4" />
-              <span className="text-sm">
-                {currentDate.toLocaleDateString('en-US', { 
-                  month: 'short', 
-                  day: 'numeric', 
-                  year: 'numeric' 
-                })}
-              </span>
+              {/* Current Date Display */}
+              <div className="flex items-center gap-2 text-white/60">
+                <Calendar className="w-4 h-4" />
+                <span className="text-xs xs:text-sm">
+                  <span className="xs:hidden">
+                    {currentDate.toLocaleDateString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric'
+                    })}
+                  </span>
+                  <span className="hidden xs:inline">
+                    {currentDate.toLocaleDateString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric', 
+                      year: 'numeric'
+                    })}
+                  </span>
+                </span>
+              </div>
             </div>
           </div>
+        </div>
+
+        {/* Daily Wisdom */}
+        <div className="rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 sm:p-6 hover-lift">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <h3 className="text-lg font-semibold text-white">Daily Wisdom</h3>
+          </div>
+          <blockquote className="text-white/90 italic leading-relaxed">
+            "{dailyQuote || 'Loading wisdom...'}"
+          </blockquote>
+          <cite className="text-white/60 text-sm">— Ancient Wisdom</cite>
         </div>
 
         {/* Enhanced Daily Tracking */}
@@ -541,7 +569,7 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
 
           {showTrackingForm ? (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 <div>
                   <label className="block text-white/80 text-xs mb-1">Steps</label>
                   <input
@@ -606,7 +634,7 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {/* Steps */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
@@ -676,6 +704,135 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
           )}
         </div>
 
+        {/* Meals & Workouts Summary Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          
+          {/* Meals Summary Card */}
+          <div className="rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 sm:p-6 hover-lift">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center">
+                  <Camera className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Today's Meals</h3>
+                  <p className="text-white/60 text-sm">{stats.todayMeals} meals logged</p>
+                </div>
+              </div>
+              {onPageChange && (
+                <button
+                  onClick={() => onPageChange('meals')}
+                  className="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm transition-colors"
+                >
+                  View All
+                </button>
+              )}
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-white/80 text-sm">Calories Consumed</span>
+                <span className="text-white font-semibold">{stats.caloriesIn} cal</span>
+              </div>
+              
+              {stats.todayMeals > 0 ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-white/60">Last meal logged {viewMode === 'day' ? 'today' : `this ${viewMode}`}</span>
+                  </div>
+                  <div className="h-1 bg-white/10 rounded-full">
+                    <div 
+                      className="h-1 bg-gradient-to-r from-orange-500 to-red-500 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min((stats.caloriesIn / 2000) * 100, 100)}%` }}
+                    ></div>
+                  </div>
+                  <div className="text-xs text-white/60">
+                    {Math.round((stats.caloriesIn / 2000) * 100)}% of 2000 cal target
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <Camera className="w-8 h-8 text-white/30 mx-auto mb-2" />
+                  <p className="text-white/50 text-sm">No meals logged yet</p>
+                  {onPageChange && (
+                    <button
+                      onClick={() => onPageChange('meals')}
+                      className="mt-2 text-orange-400 hover:text-orange-300 text-sm transition-colors"
+                    >
+                      Log your first meal →
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Workouts Summary Card */}
+          <div className="rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 sm:p-6 hover-lift">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+                  <Dumbbell className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Today's Workouts</h3>
+                  <p className="text-white/60 text-sm">{stats.todayWorkouts} sessions completed</p>
+                </div>
+              </div>
+              {onPageChange && (
+                <button
+                  onClick={() => onPageChange('workouts')}
+                  className="px-3 py-1 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-sm transition-colors"
+                >
+                  View All
+                </button>
+              )}
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-white/80 text-sm">Calories Burned</span>
+                <span className="text-white font-semibold">{stats.caloriesOut} cal</span>
+              </div>
+              
+              {stats.todayWorkouts > 0 ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-white/60">
+                      {stats.todayWorkouts === 1 ? '1 session' : `${stats.todayWorkouts} sessions`} completed
+                    </span>
+                    <span className="text-emerald-400 font-medium">
+                      {calorieDeficit > 0 ? `${calorieDeficit} cal deficit` : `${Math.abs(calorieDeficit)} cal surplus`}
+                    </span>
+                  </div>
+                  <div className="h-1 bg-white/10 rounded-full">
+                    <div 
+                      className="h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min((stats.caloriesOut / 500) * 100, 100)}%` }}
+                    ></div>
+                  </div>
+                  <div className="text-xs text-white/60">
+                    {Math.round((stats.caloriesOut / 500) * 100)}% of 500 cal burn target
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <Dumbbell className="w-8 h-8 text-white/30 mx-auto mb-2" />
+                  <p className="text-white/50 text-sm">No workouts completed yet</p>
+                  {onPageChange && (
+                    <button
+                      onClick={() => onPageChange('workouts')}
+                      className="mt-2 text-purple-400 hover:text-purple-300 text-sm transition-colors"
+                    >
+                      Start your first workout →
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Daily Todo Lists - Only show in day view */}
         {viewMode === 'day' ? (
           <div className="rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 sm:p-6 hover-lift">
@@ -720,7 +877,7 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
           </div>
 
           {/* Two Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {/* Work Column */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 mb-4">
@@ -963,20 +1120,6 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
           </div>
         )}
 
-
-        {/* Daily Wisdom */}
-        <div className="rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 sm:p-6 hover-lift">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-            <h3 className="text-lg font-semibold text-white">Daily Wisdom</h3>
-          </div>
-          <blockquote className="text-white/90 italic leading-relaxed">
-            "{dailyQuote || 'Loading wisdom...'}"
-          </blockquote>
-          <cite className="text-white/60 text-sm">— Ancient Stoic Wisdom</cite>
-        </div>
 
       </div>
     </div>
