@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5001';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
 export const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('authToken');
@@ -22,4 +22,27 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}) =>
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
   return response;
+};
+
+// Helper function for authenticated requests
+export const apiGet = async (endpoint: string) => {
+  return apiRequest(endpoint, { method: 'GET' });
+};
+
+export const apiPost = async (endpoint: string, data?: any) => {
+  return apiRequest(endpoint, {
+    method: 'POST',
+    body: data ? JSON.stringify(data) : undefined,
+  });
+};
+
+export const apiPut = async (endpoint: string, data?: any) => {
+  return apiRequest(endpoint, {
+    method: 'PUT', 
+    body: data ? JSON.stringify(data) : undefined,
+  });
+};
+
+export const apiDelete = async (endpoint: string) => {
+  return apiRequest(endpoint, { method: 'DELETE' });
 };

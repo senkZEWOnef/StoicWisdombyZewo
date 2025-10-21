@@ -11,7 +11,18 @@ const db = require("./database");
 const { authMiddleware, register, login } = require("./auth");
 
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:4173', 'http://localhost:5175'],
+  origin: [
+    'http://localhost:3000', 
+    'http://localhost:5173', 
+    'http://localhost:4173', 
+    'http://localhost:5174', 
+    'http://localhost:5175', 
+    'http://localhost:5176',
+    'https://eudaimonbyzewo.netlify.app',
+    'https://stoicwisdombyzewo.netlify.app',
+    'https://main--eudaimonbyzewo.netlify.app',
+    'https://main--stoicwisdombyzewo.netlify.app'
+  ],
   credentials: true
 }));
 app.use(express.json());

@@ -24,7 +24,7 @@ const PremiumLogin: React.FC = () => {
         ? { username, password }
         : { username, email, password };
 
-      const response = await fetch(`http://localhost:5001${endpoint}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
