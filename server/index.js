@@ -5,24 +5,22 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const app = express();
-const PORT = 5001;
+const PORT = process.env.PORT || 5001;
 
 const db = require("./database");
 const { authMiddleware, register, login } = require("./auth");
 
 app.use(cors({
-  origin: [
-    'http://localhost:3000', 
-    'http://localhost:5173', 
-    'http://localhost:4173', 
-    'http://localhost:5174', 
-    'http://localhost:5175', 
-    'http://localhost:5176',
-    'https://eudaimonbyzewo.netlify.app',
-    'https://stoicwisdombyzewo.netlify.app',
-    'https://main--eudaimonbyzewo.netlify.app',
-    'https://main--stoicwisdombyzewo.netlify.app'
-  ],
+  origin: process.env.NODE_ENV === 'production' 
+    ? true  // Allow same-origin requests in production (full-stack app)
+    : [
+        'http://localhost:3000', 
+        'http://localhost:5173', 
+        'http://localhost:4173', 
+        'http://localhost:5174', 
+        'http://localhost:5175', 
+        'http://localhost:5176'
+      ],
   credentials: true
 }));
 app.use(express.json());
@@ -48,6 +46,18 @@ const upload = multer({ storage: storage });
 
 // Serve uploaded files
 app.use('/uploads', express.static('uploads'));
+
+// Serve frontend in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, 'dist')));
+  
+  // Handle React Router - serve index.html for all non-API routes
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api') && !req.path.startsWith('/auth') && !req.path.startsWith('/uploads')) {
+      res.sendFile(path.join(__dirname, 'dist/index.html'));
+    }
+  });
+}
 
 const moodQuotes = {
   happy: [
