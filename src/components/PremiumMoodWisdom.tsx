@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { 
-  Save, Calendar, Quote, Brain, TrendingUp,
+  Save, Calendar, Quote, Brain,
   Lightbulb, Sunrise, Moon,
   CheckCircle, AlertCircle, Plus
 } from 'lucide-react';
@@ -266,15 +266,15 @@ const PremiumMoodWisdom: React.FC = () => {
     };
   };
 
-  const getRecentDays = () => {
-    const days = [];
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      days.push(date.toISOString().split('T')[0]);
-    }
-    return days.map(date => getEntriesForDate(date));
-  };
+  // const getRecentDays = () => {
+  //   const days = [];
+  //   for (let i = 6; i >= 0; i--) {
+  //     const date = new Date();
+  //     date.setDate(date.getDate() - i);
+  //     days.push(date.toISOString().split('T')[0]);
+  //   }
+  //   return days.map(date => getEntriesForDate(date));
+  // };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -309,7 +309,7 @@ const PremiumMoodWisdom: React.FC = () => {
     );
   }
 
-  const recentDays = getRecentDays();
+  // const recentDays = getRecentDays();
   const todayEntries = getEntriesForDate(selectedDate);
   // const currentTimeSlot = getCurrentTimeSlot();
 

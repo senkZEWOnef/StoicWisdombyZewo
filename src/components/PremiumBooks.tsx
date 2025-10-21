@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Plus, Book, Camera, FileText, ArrowLeft, Upload, X, Edit, Save, Search, Filter, Trash2, MoreVertical } from 'lucide-react';
+import { Plus, Book, Camera, ArrowLeft, Upload, X, Edit, Save, Search, Filter, Trash2 } from 'lucide-react';
 
 interface BookNote {
   id: number;
@@ -29,7 +29,7 @@ const PremiumBooks: React.FC = () => {
   const [showAddBook, setShowAddBook] = useState(false);
   const [showAddNote, setShowAddNote] = useState(false);
   const [showEditBook, setShowEditBook] = useState(false);
-  const [editingNote, setEditingNote] = useState<BookNote | null>(null);
+  // const [editingNote] = useState<BookNote | null>(null);
   const [loading, setLoading] = useState(true);
   
   // Search and filter state
@@ -37,12 +37,19 @@ const PremiumBooks: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('all');
 
   // Book form state
-  const [bookForm, setBookForm] = useState({
+  const [bookForm, setBookForm] = useState<{
+    title: string;
+    author: string;
+    genre: string;
+    description: string;
+    status: 'reading' | 'completed' | 'want-to-read';
+    rating: number;
+  }>({
     title: '',
     author: '',
     genre: '',
     description: '',
-    status: 'reading' as const,
+    status: 'reading',
     rating: 0
   });
 
@@ -358,10 +365,10 @@ const PremiumBooks: React.FC = () => {
                   {selectedBook.status.replace('-', ' ')}
                 </span>
                 
-                {selectedBook.rating > 0 && (
+                {selectedBook.rating && selectedBook.rating > 0 && (
                   <div className="flex items-center">
                     {[...Array(5)].map((_, i) => (
-                      <span key={i} className={`text-lg ${i < selectedBook.rating! ? 'text-yellow-400' : 'text-gray-300'}`}>
+                      <span key={i} className={`text-lg ${i < (selectedBook.rating || 0) ? 'text-yellow-400' : 'text-gray-300'}`}>
                         ★
                       </span>
                     ))}
@@ -926,10 +933,10 @@ const PremiumBooks: React.FC = () => {
                 <h3 className="font-semibold text-white line-clamp-2 mb-1">{book.title}</h3>
                 <p className="text-gray-300 text-sm mb-2">{book.author}</p>
                 
-                {book.rating > 0 && (
+                {book.rating && book.rating > 0 && (
                   <div className="flex items-center gap-1">
                     {[...Array(5)].map((_, i) => (
-                      <span key={i} className={`text-sm ${i < book.rating! ? 'text-yellow-400' : 'text-gray-300'}`}>
+                      <span key={i} className={`text-sm ${i < (book.rating || 0) ? 'text-yellow-400' : 'text-gray-300'}`}>
                         ★
                       </span>
                     ))}

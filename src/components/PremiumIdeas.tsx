@@ -323,7 +323,7 @@ const PremiumIdeas: React.FC = () => {
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="pl-12 pr-8 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500 appearance-none min-w-[200px]"
+              className="w-full sm:min-w-[200px] pl-12 pr-8 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500 appearance-none"
             >
               <option value="all" className="bg-gray-800">All Categories</option>
               {categories.map(cat => (

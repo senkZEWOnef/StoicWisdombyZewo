@@ -37,7 +37,7 @@ class ExerciseAPI {
   private readonly API_NINJAS_KEY = ''; // Users can add their own key
   private readonly API_NINJAS_BASE_URL = 'https://api.api-ninjas.com/v1';
   private readonly FREE_EXERCISE_DB_URL = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json';
-  private readonly EXERCISE_DB_BASE_URL = 'https://exercisedb.p.rapidapi.com';
+  // private readonly EXERCISE_DB_BASE_URL = 'https://exercisedb.p.rapidapi.com';
 
   // Cache for the free exercise database
   private exerciseCache: Exercise[] | null = null;
@@ -86,10 +86,10 @@ class ExerciseAPI {
         }
         const exercises = await response.json();
         this.exerciseCache = exercises.map((ex: any) => this.parseFreeExerciseDB(ex));
-        console.log(`Loaded ${this.exerciseCache.length} exercises from Free Exercise DB`);
+        console.log(`Loaded ${this.exerciseCache?.length || 0} exercises from Free Exercise DB`);
       }
       
-      return this.filterExercises(this.exerciseCache, query, options);
+      return this.filterExercises(this.exerciseCache || [], query, options);
     } catch (error) {
       console.error('Error fetching Free Exercise DB:', error);
       return [];

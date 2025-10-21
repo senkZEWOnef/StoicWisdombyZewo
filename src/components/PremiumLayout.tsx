@@ -239,7 +239,7 @@ const PremiumLayout: React.FC<PremiumLayoutProps> = ({ children, currentPage, on
                   <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-gradient-to-r ${currentMenuItem.gradient} flex items-center justify-center`}>
                     <currentMenuItem.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                   </div>
-                  <h1 className="text-base sm:text-lg font-semibold text-white truncate max-w-[150px] sm:max-w-none">{currentMenuItem.label}</h1>
+                  <h1 className="text-base sm:text-lg font-semibold text-white truncate max-w-[120px] xs:max-w-[150px] sm:max-w-none">{currentMenuItem.label}</h1>
                 </>
               )}
             </div>
@@ -257,7 +257,7 @@ const PremiumLayout: React.FC<PremiumLayoutProps> = ({ children, currentPage, on
       {/* Settings Modal */}
       {showSettings && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl border border-white/20 rounded-2xl p-6 w-full max-w-md">
+          <div className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl border border-white/20 rounded-2xl p-4 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center">

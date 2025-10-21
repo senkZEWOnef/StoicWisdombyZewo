@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { 
-  Target, Heart, BookOpen, Dumbbell, Camera, Plus, 
-  Sparkles, Sun, Moon, Edit3, Save, X, Activity, Brain, 
-  Smile, Star, Zap, Footprints, Flame, CheckSquare,
-  Square, Trash2, Droplets, Book, FileText, Lightbulb,
+  Target, Dumbbell, Camera, Plus, 
+  Sparkles, Sun, Moon, Edit3, Save, X, Activity, 
+  Zap, Footprints, Flame, CheckSquare,
+  Square, Trash2, Droplets,
   ChevronLeft, ChevronRight, Calendar
 } from 'lucide-react';
 
@@ -124,7 +124,7 @@ const PremiumDashboard: React.FC<PremiumDashboardProps> = ({ onPageChange }) => 
           fetch(`http://localhost:5001/workout-stats/${selectedDate}`, { headers })
         ]);
 
-        const [journal, workouts, meals, goals, reminders, todosData, workoutStats] = await Promise.all([
+        const [journal, , meals, goals, reminders, todosData, workoutStats] = await Promise.all([
           journalRes.json(),
           workoutsRes.json(),
           mealsRes.json(),

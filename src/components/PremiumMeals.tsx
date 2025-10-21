@@ -426,7 +426,7 @@ const PremiumMeals: React.FC = () => {
       }
     } catch (error) {
       console.error('Error saving meal:', error);
-      alert(`Error saving meal: ${error.message}`);
+      alert(`Error saving meal: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSaving(false);
     }

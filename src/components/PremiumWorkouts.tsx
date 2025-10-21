@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { exerciseAPI, type Exercise, type WorkoutInfo } from '../services/exerciseApi';
 import { 
-  Dumbbell, Plus, CheckCircle, Calendar, Timer, Flame, Save, X, TrendingUp, Target, Award, Activity, Search, Trash2,
-  Zap, Database, Loader2, Play, Pause, RotateCcw, Users, Filter, ChevronDown, ChevronUp, Clock, Weight, Repeat
+  Dumbbell, Plus, Flame, Save, X, TrendingUp, Award, Activity, Search, Trash2,
+  Zap, Database, Loader2, Clock, Weight, Repeat
 } from 'lucide-react';
 
 interface WorkoutSession {
@@ -67,7 +67,7 @@ const PremiumWorkouts: React.FC = () => {
   
   // Other states
   const [deleting, setDeleting] = useState<number | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  // const [searchTerm] = useState('');
 
   useEffect(() => {
     fetchWorkoutSessions();
