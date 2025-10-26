@@ -45,7 +45,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange }) 
   };
 
   return (
-    <div className="d-flex">
+    <div className="d-flex" style={{ height: '100vh', overflow: 'hidden' }}>
       {/* Sidebar Overlay for mobile */}
       {sidebarOpen && (
         <div 
@@ -56,9 +56,9 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange }) 
       )}
 
       {/* Sidebar */}
-      <div className={`bg-primary text-white position-fixed position-md-sticky h-100 ${sidebarOpen ? 'd-block' : 'd-none d-md-block'}`} 
-           style={{ width: '250px', top: 0, left: 0, zIndex: 1050 }}>
-        <div className="p-3">
+      <div className={`bg-primary text-white position-fixed position-md-sticky d-flex flex-column ${sidebarOpen ? 'd-flex' : 'd-none d-md-flex'}`} 
+           style={{ width: '250px', top: 0, left: 0, zIndex: 1050, height: '100vh' }}>
+        <div className="p-3 flex-grow-1 d-flex flex-column">
           <div className="d-flex justify-content-between align-items-center mb-4">
             <h4 className="mb-0">🧘 Journal</h4>
             <button 
@@ -73,7 +73,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange }) 
             Welcome, {user?.username}!
           </div>
 
-          <nav>
+          <nav className="flex-grow-1" style={{ overflowY: 'auto' }}>
             {menuItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -94,7 +94,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange }) 
             })}
           </nav>
 
-          <div className="mt-auto pt-4">
+          <div className="mt-3">
             <button
               className="btn btn-outline-light w-100 d-flex align-items-center justify-content-center"
               onClick={handleLogout}
@@ -107,23 +107,31 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange }) 
       </div>
 
       {/* Main Content */}
-      <div className="flex-grow-1" style={{ marginLeft: sidebarOpen ? '0' : '0' }}>
-        {/* Top Bar */}
-        <div className="bg-white border-bottom p-3 d-flex align-items-center">
+      <div className="flex-grow-1 d-flex flex-column" style={{ height: '100vh', overflow: 'hidden' }}>
+        {/* Top Bar - Reorganized for mobile */}
+        <div className="bg-white border-bottom p-3 d-flex align-items-center justify-content-between">
+          {/* Left side - App icon/title */}
+          <div className="d-flex align-items-center">
+            <span className="h4 mb-0 me-3 d-md-none">🧘</span>
+            <h1 className="h4 mb-0 text-capitalize d-none d-md-block">
+              {menuItems.find(item => item.id === currentPage)?.label || 'Dashboard'}
+            </h1>
+            <h1 className="h5 mb-0 text-capitalize d-md-none">
+              {menuItems.find(item => item.id === currentPage)?.label || 'Dashboard'}
+            </h1>
+          </div>
+          
+          {/* Right side - Burger menu */}
           <button
-            className="btn btn-outline-primary d-md-none me-3"
+            className="btn btn-outline-primary d-md-none"
             onClick={() => setSidebarOpen(true)}
           >
             <Menu size={20} />
           </button>
-          
-          <h1 className="h4 mb-0 text-capitalize">
-            {menuItems.find(item => item.id === currentPage)?.label || 'Dashboard'}
-          </h1>
         </div>
 
-        {/* Page Content */}
-        <div className="p-4">
+        {/* Page Content - Scrollable */}
+        <div className="flex-grow-1 p-3 p-md-4" style={{ overflowY: 'auto', overflowX: 'hidden' }}>
           {children}
         </div>
       </div>
